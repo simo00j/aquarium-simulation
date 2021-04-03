@@ -5,9 +5,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <strings.h>
+#include <string.h>
 #include <pthread.h>
 
 #include "launch_server.h"
+#include "message.h"
+#include "control.h"
 
 void error(char *msg)
 {
@@ -24,19 +27,23 @@ void* talk(void* args) {
     thread_args_t *arg = (thread_args_t*) args;
     char* buffer = arg->buffer;
     int newsockfd = arg->newsockfd;
-    int n;
-    while (1){
-    bzero(buffer, 256);
-    n = read(newsockfd, buffer, 255);
-    if (n < 0)
-        error("ERROR reading from socket");
+    int n, len_answer;
+    char* answer;
+    while (control__is_connected(newsockfd)) {
+        bzero(buffer, 256);
+        n = read(newsockfd, buffer, 255);
+        if (n < 0)
+            error("ERROR reading from socket");
 
-    printf("Here is the message by %d: %s\n", newsockfd, buffer);
-    
-    n = write(newsockfd, "I got your message", 18);
+        printf("Here is the message by %d: %s\n", newsockfd, buffer);
 
-    if (n < 0)
-        error("ERROR writing to socket");
+        answer = message__processing(buffer, newsockfd);
+        len_answer = strlen(answer);
+        
+        n = write(newsockfd, answer, len_answer);
+
+        if (n < 0)
+            error("ERROR writing to socket");
     }
     return (void*) 0;
 }
@@ -66,7 +73,6 @@ int launch_server(int portno)
     clilen = sizeof(cli_addr);
 
     while(1) {
-
         newsockfd = accept(sockfd,
                         (struct sockaddr *)&cli_addr,
                         (socklen_t *)&clilen);
@@ -74,12 +80,13 @@ int launch_server(int portno)
         if (newsockfd < 0) 
             error("ERROR on accept");
 
+        control__connect(newsockfd);
+
         thread_args = malloc(sizeof(thread_args_t));
         thread_args->buffer = buffer;
         thread_args->newsockfd = newsockfd;
 
         pthread_create(&thread, NULL, talk, thread_args);
-
     }
 
     return 0;

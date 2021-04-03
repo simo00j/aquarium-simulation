@@ -53,7 +53,7 @@ int launch_fake_client(int portno, struct hostent *server)
 
         if (n < 0)
             error("ERROR reading from socket");
-        printf("%s\n", buffer);
+        printf("Received: %s\n", buffer);
     }
     return 0;
 }
