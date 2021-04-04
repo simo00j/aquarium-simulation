@@ -7,10 +7,17 @@
 #include <strings.h>
 #include <string.h>
 #include <pthread.h>
+#include <signal.h>
+#include <sys/time.h>
+
 
 #include "launch_server.h"
 #include "message.h"
 #include "control.h"
+
+#define MAX_CLIENTS 50
+
+int server_connected = 0;
 
 void error(char *msg)
 {
@@ -29,21 +36,43 @@ void* talk(void* args) {
     int newsockfd = arg->newsockfd;
     int n, len_answer;
     char* answer;
-    while (control__is_connected(newsockfd)) {
+    while (control__is_connected(newsockfd) && server_connected) {
         bzero(buffer, 256);
+        
         n = read(newsockfd, buffer, 255);
         if (n < 0)
             error("ERROR reading from socket");
 
-        printf("Here is the message by %d: %s\n", newsockfd, buffer);
+        //printf("Here is the message by thread %d: %s\n", newsockfd, buffer);
 
         answer = message__processing(buffer, newsockfd);
         len_answer = strlen(answer);
         
+        signal(SIGPIPE, SIG_IGN); // voir avec sigaction
         n = write(newsockfd, answer, len_answer);
 
-        if (n < 0)
-            error("ERROR writing to socket");
+        if (n < 0) {
+            //printf("\n\nThread %d left\n\n Commmand: ", newsockfd);
+            return (void*) 0;
+        }
+    }
+    return (void*) 0;
+}
+
+void* server_interface(void* args) {
+    
+    char buffer[256];
+    (void) args;
+    
+    while(server_connected){
+        printf("\nCommand: ");
+        bzero(buffer, 256);
+        fgets(buffer, 255, stdin);
+        
+        if(!strcmp(buffer, "close server\n")) {
+            server_connected = 0;
+            printf("Server disconnected\n");}
+        else printf("Not a valid command\n ");
     }
     return (void*) 0;
 }
@@ -54,7 +83,9 @@ int launch_server(int portno)
     char buffer[256];
     struct sockaddr_in serv_addr, cli_addr;
     thread_args_t* thread_args;
-    pthread_t thread;
+    pthread_t thread[MAX_CLIENTS];
+    pthread_t thread_server;
+    int nb_client = 0;
         
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0)
@@ -72,7 +103,12 @@ int launch_server(int portno)
     listen(sockfd, 5);
     clilen = sizeof(cli_addr);
 
-    while(1) {
+    server_connected = 1;
+    pthread_create(&thread_server, NULL, server_interface, NULL);
+    
+    
+    while(server_connected) {
+        //voir select..
         newsockfd = accept(sockfd,
                         (struct sockaddr *)&cli_addr,
                         (socklen_t *)&clilen);
@@ -86,8 +122,16 @@ int launch_server(int portno)
         thread_args->buffer = buffer;
         thread_args->newsockfd = newsockfd;
 
-        pthread_create(&thread, NULL, talk, thread_args);
+        pthread_create(&thread[nb_client], NULL, talk, thread_args);
+        nb_client++;
     }
+
+    pthread_join(thread_server, NULL);
+    printf("join server done\n");
+    for (int i = 0; i < nb_client; i++) {
+        pthread_join(thread[i], NULL);
+    }
+    printf("join clients done\n");
 
     return 0;
 

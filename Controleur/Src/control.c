@@ -60,7 +60,7 @@ void control__disconnect(int id) {
 int control__ask_id_hello(int thread_id) {
     int k = find_aquarium(thread_id);
     if (k != -1)
-        return -1;
+        return k;
 
     int i = find_place(aquarium_ids, MAX_AQUARIUM);
     if (i > -1)
@@ -69,10 +69,9 @@ int control__ask_id_hello(int thread_id) {
 }
 
 int control__ask_id_hello_in_as(int aquarium_id, int thread_id) {
-    printf("aqua id = %d\n ", aquarium_id);
     int k = find_aquarium(thread_id);
     if (k != -1)
-        return -1;
+        return k;
 
     if (aquarium_id < MAX_AQUARIUM 
     && aquarium_ids[aquarium_id] == 0) {

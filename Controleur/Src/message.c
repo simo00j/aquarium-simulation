@@ -143,7 +143,6 @@ void message__read(char *msg, int id) {
 }
 
 char* message__processing(char* msg, int id) {
-    printf("%s\n", answer_buffer);
     message__read(msg, id);
     return answer_buffer;
 }
