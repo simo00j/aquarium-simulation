@@ -35,7 +35,7 @@ void* talk(void* args) {
     char* buffer = arg->buffer;
     int newsockfd = arg->newsockfd;
     int n, len_answer;
-    char* answer;
+    char answer_buffer[256];
     while (control__is_connected(newsockfd) && server_connected) {
         bzero(buffer, 256);
         
@@ -44,12 +44,13 @@ void* talk(void* args) {
             error("ERROR reading from socket");
 
         //printf("Here is the message by thread %d: %s\n", newsockfd, buffer);
+        
 
-        answer = message__processing(buffer, newsockfd);
-        len_answer = strlen(answer);
+        message__processing(buffer, newsockfd, answer_buffer);
+        len_answer = strlen(answer_buffer);
         
         signal(SIGPIPE, SIG_IGN); // voir avec sigaction
-        n = write(newsockfd, answer, len_answer);
+        n = write(newsockfd, answer_buffer, len_answer);
 
         if (n < 0) {
             //printf("\n\nThread %d left\n\n Commmand: ", newsockfd);

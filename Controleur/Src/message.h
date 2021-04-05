@@ -1,1 +1,1 @@
-char* message__processing(char* msg, int id);
+void message__processing(char* msg, int id, char* answer_buffer);

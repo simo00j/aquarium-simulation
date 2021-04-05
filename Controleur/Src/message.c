@@ -17,8 +17,6 @@ typedef enum message_type{
     DEFAULT,
 } message_type;
 
-char answer_buffer[BUFFER_SIZE]; //dangereux avec les thread, a voir si autre idée (ou au moins mettre des mutex)
-
 message_type message__get_type(char *cmd) {   
     if (!strcmp(cmd, "hello")) 
         return HELLO;
@@ -50,42 +48,42 @@ void message__parser(char* parsed_msg[], char* msg) {
     }
 }
 
-void message__hello_in_as_id(int aquarium_id, int id) {
-    int new_aquarium_id = control__ask_id_hello_in_as(aquarium_id, id);
+void message__hello_in_as_id(int aquarium_id, int id, char* answer_buffer) {
+    int new_aquarium_id = control__set_aquarium_id_named(aquarium_id, id);
     if (new_aquarium_id > -1)
         sprintf(answer_buffer, "gretting %d\n", new_aquarium_id);
     else sprintf(answer_buffer, "no gretting\n");
 }
 
-void message__hello(int id) {
-    int new_aquarium_id = control__ask_id_hello(id);
+void message__hello(int id, char* answer_buffer) {
+    int new_aquarium_id = control__set_aquarium_id(id);
     if (new_aquarium_id > -1)
         sprintf(answer_buffer, "gretting %d\n", new_aquarium_id);
     else sprintf(answer_buffer, "no gretting\n");
 }
 
-void message__getFishes() {
+void message__getFishes(char* answer_buffer) {
     sprintf(answer_buffer, "list [PoissonRouge at 90x4,10x4,5] [PoissonClown at 20x80,12x6,5]\n");
 }
 
-void message__log_out(int id) {
+void message__log_out(int id, char* answer_buffer) {
     control__disconnect(id);
     sprintf(answer_buffer, "bye\n");
 }
 
-void message__ping(int ping) {
+void message__ping(int ping, char* answer_buffer) {
     sprintf(answer_buffer, "pong %d\n", ping);
 }
 
-void message__status() {
+void message__status(char* answer_buffer) {
     sprintf(answer_buffer, "Connecté au controleur\n");
 }
 
-void message__default() {
+void message__default(char* answer_buffer) {
     sprintf(answer_buffer, "Commande introuvable\n");
 }
 
-void message__bad_args(char* cmd) {
+void message__bad_args(char* cmd, char* answer_buffer) {
     sprintf(answer_buffer, "Arguments non conformes pour la commande %s\n", cmd);
 }
 
@@ -97,7 +95,7 @@ int count_args(char* message[]) {
     return i - 1;
 }
 
-void message__read(char *msg, int id) {
+void message__read(char *msg, int id, char* answer_buffer) {
     char* message[MSG_SIZE];
     message__parser(message, msg);
     message_type type = message__get_type(message[0]);
@@ -106,46 +104,46 @@ void message__read(char *msg, int id) {
     switch (type) {
         case PING:
         if (nb_args == 1) 
-            message__ping(atoi(message[1]));
-        else message__bad_args("ping");
+            message__ping(atoi(message[1]), answer_buffer);
+        else message__bad_args("ping", answer_buffer);
         break;
 
         case HELLO:
         if (nb_args == 3
         && !strcmp(message[1], "in")
         && !strcmp(message[2], "as"))
-            message__hello_in_as_id(atoi(message[3]), id);
-        else if (nb_args == 0) message__hello(id);
-        else message__bad_args("hello");
+            message__hello_in_as_id(atoi(message[3]), id, answer_buffer);
+        else if (nb_args == 0) message__hello(id, answer_buffer);
+        else message__bad_args("hello", answer_buffer);
         break;
 
         case GET_FISHES:
-        if (nb_args == 0) message__getFishes();
-        else message__bad_args("getFishes");
+        if (nb_args == 0) message__getFishes(answer_buffer);
+        else message__bad_args("getFishes", answer_buffer);
         break;
 
         case STATUS:
-        if (nb_args == 0) message__status();
-        else message__bad_args("status");
+        if (nb_args == 0) message__status(answer_buffer);
+        else message__bad_args("status", answer_buffer);
         break;
 
         case LOG:
         if (nb_args == 1 
         && !strcmp(message[1], "out"))
-            message__log_out(id);
-        else message__bad_args("log");
+            message__log_out(id, answer_buffer);
+        else message__bad_args("log", answer_buffer);
         break;
 
         default:
-        message__default();
+        message__default(answer_buffer);
         break;
     }
 }
 
-char* message__processing(char* msg, int id) {
-    message__read(msg, id);
-    return answer_buffer;
+void message__processing(char* msg, int id, char* answer_buffer) {
+    message__read(msg, id, answer_buffer);
 }
+
 /*
 int main(){
     char str[] =" hello ";
