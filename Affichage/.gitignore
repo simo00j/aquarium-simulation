@@ -1,0 +1,14 @@
+# Temporary files
+*~
+\#*
+
+# Compiled files
+*.o
+*.so
+*.a
+
+
+# IntelliJ files
+.idea
+Affichage/.idea
+Affichage/out
