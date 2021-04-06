@@ -1,9 +1,7 @@
 #ifndef __AQUARIUM__H__
 #define __AQUARIUM__H__
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+
 #include "fish.h"
 
 typedef struct view
@@ -16,10 +14,10 @@ typedef struct view
 typedef struct aquarium
 {
     size size;
-    int views_number;
-    int fish_number;
     fish **fish;
+    int fish_number;
     view **views;
+    int views_number; 
 } aquarium;
 
 aquarium *getDataFromFile(char *filepath);
