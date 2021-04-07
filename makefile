@@ -8,8 +8,8 @@ BIN = server test_server
 .PHONY: all
 all: $(BIN)
 
-server: launch_server.o server.o message.o control.o
-	gcc -o server launch_server.o server.o message.o control.o ${THREAD_FLAGS}
+server: launch_server.o server.o message.o control_client.o control_server.o command.o
+	gcc -o server launch_server.o server.o message.o control_client.o control_server.o command.o ${THREAD_FLAGS}
 
 launch_server.o: 
 	gcc -o launch_server.o -c ${CTL_PATH}launch_server.c ${CFLAGS}
@@ -17,11 +17,20 @@ launch_server.o:
 message.o:
 	gcc -o message.o -c ${CTL_PATH}message.c ${CFLAGS}
 
+command.o:
+	gcc -o command.o -c ${CTL_PATH}command.c ${CFLAGS}
+
+control_client.o:
+	gcc -o control_client.o -c ${CTL_PATH}control_client.c ${CFLAGS}
+
+control_server.o:
+	gcc -o control_server.o -c ${CTL_PATH}control_server.c ${CFLAGS}
+
+
 server.o:
 	gcc -o server.o -c ${CTL_PATH}server.c ${CFLAGS}
 
-control.o:
-	gcc -o control.o -c ${CTL_PATH}control.c ${CFLAGS}
+
 
 
 test_server: fake_client.o test_server.o
