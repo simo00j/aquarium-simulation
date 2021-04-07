@@ -13,11 +13,11 @@
 
 #include "launch_server.h"
 #include "message.h"
-#include "control.h"
+#include "command.h"
+#include "control_client.h"
+#include "control_server.h"
 
 #define MAX_CLIENTS 50
-
-int server_connected = 0;
 
 void error(char *msg)
 {
@@ -36,24 +36,24 @@ void* talk(void* args) {
     int newsockfd = arg->newsockfd;
     int n, len_answer;
     char answer_buffer[256];
-    while (control__is_connected(newsockfd) && server_connected) {
+    while (control_client__is_connected(newsockfd) && control_server__is_connected()) {
         bzero(buffer, 256);
         
         n = read(newsockfd, buffer, 255);
         if (n < 0)
             error("ERROR reading from socket");
 
-        //printf("Here is the message by thread %d: %s\n", newsockfd, buffer);
+        //printf("Here is the message by socket %d: %s\n", newsockfd, buffer);
         
 
-        message__processing(buffer, newsockfd, answer_buffer);
+        message__read(buffer, newsockfd, answer_buffer);
         len_answer = strlen(answer_buffer);
         
         signal(SIGPIPE, SIG_IGN); // voir avec sigaction
         n = write(newsockfd, answer_buffer, len_answer);
 
         if (n < 0) {
-            //printf("\n\nThread %d left\n\n Commmand: ", newsockfd);
+            //printf("\n\nSocket %d left\n\n Commmand: ", newsockfd);
             return (void*) 0;
         }
     }
@@ -63,17 +63,17 @@ void* talk(void* args) {
 void* server_interface(void* args) {
     
     char buffer[256];
+    char answer_buffer[256];
     (void) args;
     
-    while(server_connected){
-        printf("\nCommand: ");
+    while(control_server__is_connected()){
+        printf("Commande: ");
         bzero(buffer, 256);
         fgets(buffer, 255, stdin);
         
-        if(!strcmp(buffer, "close server\n")) {
-            server_connected = 0;
-            printf("Server disconnected\n");}
-        else printf("Not a valid command\n ");
+        command__read(buffer, answer_buffer);
+
+        printf("%s\n", answer_buffer);
     }
     return (void*) 0;
 }
@@ -104,11 +104,11 @@ int launch_server(int portno)
     listen(sockfd, 5);
     clilen = sizeof(cli_addr);
 
-    server_connected = 1;
+    control_server__connect();
     pthread_create(&thread_server, NULL, server_interface, NULL);
     
     
-    while(server_connected) {
+    while(control_server__is_connected()) {
         //voir select..
         newsockfd = accept(sockfd,
                         (struct sockaddr *)&cli_addr,
@@ -117,7 +117,7 @@ int launch_server(int portno)
         if (newsockfd < 0) 
             error("ERROR on accept");
 
-        control__connect(newsockfd);
+        control_client__connect(newsockfd);
 
         thread_args = malloc(sizeof(thread_args_t));
         thread_args->buffer = buffer;

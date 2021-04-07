@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "control.h"
+#include "control_client.h"
 
 #define MAX_CONNEXION 10
 #define MAX_AQUARIUM 10
@@ -36,18 +36,18 @@ int find_aquarium(int id) {
     return -1;
 }
 
-int control__is_connected(int id) {
+int control_client__is_connected(int id) {
     int i = find_id(id);
     return is_connected[i];
 }
 
-void control__connect(int id) {
+void control_client__connect(int id) {
     int i = find_place(is_connected, MAX_CONNEXION);
     is_connected[i] = 1;
     connected_skt_ids[i] = id;
 }
 
-void control__disconnect(int id) {
+void control_client__disconnect(int id) {
     int i = find_id(id);
     is_connected[i] = 0;
     connected_skt_ids[i] = -1;
@@ -57,7 +57,7 @@ void control__disconnect(int id) {
         aquarium_ids[k] = 0;
 }
 
-int control__set_aquarium_id(int skt_id) {
+int control_client__set_aquarium_id(int skt_id) {
     int k = find_aquarium(skt_id);
     if (k != -1)
         return k;
@@ -68,7 +68,7 @@ int control__set_aquarium_id(int skt_id) {
     return i; 
 }
 
-int control__set_aquarium_id_named(int aquarium_id, int skt_id) {
+int control_client__set_aquarium_id_named(int aquarium_id, int skt_id) {
     int k = find_aquarium(skt_id);
     if (k != -1)
         return k;

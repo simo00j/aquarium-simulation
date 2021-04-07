@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "message.h"
-#include "control.h"
+#include "control_client.h"
 
 #define MSG_SIZE 128
 #define BUFFER_SIZE 256
@@ -36,7 +36,6 @@ void message__parser(char* parsed_msg[], char* msg) {
     msg[l-1] = ' ';
     char* token;
     token = strtok(msg, " "); 
-
     if(token != NULL) {
         parsed_msg[0] = token;
         int args = 1;
@@ -49,14 +48,14 @@ void message__parser(char* parsed_msg[], char* msg) {
 }
 
 void message__hello_in_as_id(int aquarium_id, int id, char* answer_buffer) {
-    int new_aquarium_id = control__set_aquarium_id_named(aquarium_id, id);
+    int new_aquarium_id = control_client__set_aquarium_id_named(aquarium_id, id);
     if (new_aquarium_id > -1)
         sprintf(answer_buffer, "gretting %d\n", new_aquarium_id);
     else sprintf(answer_buffer, "no gretting\n");
 }
 
 void message__hello(int id, char* answer_buffer) {
-    int new_aquarium_id = control__set_aquarium_id(id);
+    int new_aquarium_id = control_client__set_aquarium_id(id);
     if (new_aquarium_id > -1)
         sprintf(answer_buffer, "gretting %d\n", new_aquarium_id);
     else sprintf(answer_buffer, "no gretting\n");
@@ -67,7 +66,7 @@ void message__getFishes(char* answer_buffer) {
 }
 
 void message__log_out(int id, char* answer_buffer) {
-    control__disconnect(id);
+    control_client__disconnect(id);
     sprintf(answer_buffer, "bye\n");
 }
 
@@ -76,7 +75,7 @@ void message__ping(int ping, char* answer_buffer) {
 }
 
 void message__status(char* answer_buffer) {
-    sprintf(answer_buffer, "Connecté au controleur\n");
+    sprintf(answer_buffer, "Connecté au control_clienteur\n");
 }
 
 void message__default(char* answer_buffer) {
@@ -140,13 +139,12 @@ void message__read(char *msg, int id, char* answer_buffer) {
     }
 }
 
-void message__processing(char* msg, int id, char* answer_buffer) {
-    message__read(msg, id, answer_buffer);
-}
 
 /*
 int main(){
-    char str[] =" hello ";
-    printf("Returned: %s",message__processing(str));
+    char str[] ="hello\n";
+    char buf[256];
+    message__read(str, 0, buf);
+    printf("Returned: %s",buf);
 }
 */
