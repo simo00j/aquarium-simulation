@@ -14,6 +14,11 @@ typedef enum message_type{
     LOG,
     PING,
     STATUS,
+    ADD_FISH,
+    DEL_FISH,
+    START_FISH,
+    LS,
+    GET_FISHES_CONTINUOUSLY,
     DEFAULT,
 } message_type;
 
@@ -26,6 +31,16 @@ message_type message__get_type(char *cmd) {
         return LOG;
     if (!strcmp(cmd, "ping")) 
         return PING;
+    if (!strcmp(cmd, "addFish")) 
+        return ADD_FISH;
+    if (!strcmp(cmd, "delFish")) 
+        return DEL_FISH;
+    if (!strcmp(cmd, "startFish")) 
+        return START_FISH;
+    if (!strcmp(cmd, "ls")) 
+        return LS;
+    if (!strcmp(cmd, "getFishesContinuously")) 
+        return GET_FISHES_CONTINUOUSLY;
     if (!strcmp(cmd, "status")) 
         return STATUS;
     else return DEFAULT; 
@@ -76,6 +91,26 @@ void message__ping(int ping, char* answer_buffer) {
 
 void message__status(char* answer_buffer) {
     sprintf(answer_buffer, "Connecté au control_clienteur\n");
+}
+
+void message__add_fish(char* answer_buffer) {
+    sprintf(answer_buffer, "Pas encore implémenté\n");
+}
+
+void message__del_fish(char* answer_buffer) {
+    sprintf(answer_buffer, "Pas encore implémenté\n");
+}
+
+void message__start_fish(char* answer_buffer) {
+    sprintf(answer_buffer, "Pas encore implémenté\n");
+}
+
+void message__ls(char* answer_buffer) {
+    sprintf(answer_buffer, "Pas encore implémenté\n");
+}
+
+void message__get_fishes_continuously(char* answer_buffer) {
+    sprintf(answer_buffer, "Pas encore implémenté\n");
 }
 
 void message__default(char* answer_buffer) {
@@ -131,6 +166,26 @@ void message__read(char *msg, int id, char* answer_buffer) {
         && !strcmp(message[1], "out"))
             message__log_out(id, answer_buffer);
         else message__bad_args("log", answer_buffer);
+        break;
+
+        case ADD_FISH:
+        message__add_fish(answer_buffer);
+        break;
+
+        case DEL_FISH:
+        message__del_fish(answer_buffer);
+        break;
+
+        case START_FISH:
+        message__start_fish(answer_buffer);
+        break;
+
+        case LS:
+        message__ls(answer_buffer);
+        break;
+
+        case GET_FISHES_CONTINUOUSLY:
+        message__get_fishes_continuously(answer_buffer);
         break;
 
         default:
