@@ -1,1 +1,0 @@
-void command__read(char *cmd, char* answer_buffer);
