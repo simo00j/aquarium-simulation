@@ -62,15 +62,15 @@ void message__parser(char* parsed_msg[], char* msg) {
     }
 }
 
-void message__hello_in_as_id(int aquarium_id, int id, char* answer_buffer) {
-    int new_aquarium_id = control_client__set_aquarium_id_named(aquarium_id, id);
+void message__hello_in_as_id(int aquarium_id, int socketfd, char* answer_buffer) {
+    int new_aquarium_id = control_client__set_aquarium_id_named(aquarium_id, socketfd);
     if (new_aquarium_id > -1)
         sprintf(answer_buffer, "gretting %d\n", new_aquarium_id);
     else sprintf(answer_buffer, "no gretting\n");
 }
 
-void message__hello(int id, char* answer_buffer) {
-    int new_aquarium_id = control_client__set_aquarium_id(id);
+void message__hello(int socketfd, char* answer_buffer) {
+    int new_aquarium_id = control_client__set_aquarium_id(socketfd);
     if (new_aquarium_id > -1)
         sprintf(answer_buffer, "gretting %d\n", new_aquarium_id);
     else sprintf(answer_buffer, "no gretting\n");
@@ -80,8 +80,8 @@ void message__getFishes(char* answer_buffer) {
     sprintf(answer_buffer, "list [PoissonRouge at 90x4,10x4,5] [PoissonClown at 20x80,12x6,5]\n");
 }
 
-void message__log_out(int id, char* answer_buffer) {
-    control_client__disconnect(id);
+void message__log_out(int socketfd, char* answer_buffer) {
+    control_client__disconnect(socketfd);
     sprintf(answer_buffer, "bye\n");
 }
 
@@ -129,7 +129,7 @@ int count_args(char* message[]) {
     return i - 1;
 }
 
-void message__read(char *msg, int id, char* answer_buffer) {
+void message__read(char *msg, int socketfd, char* answer_buffer) {
     char* message[MSG_SIZE];
     message__parser(message, msg);
     message_type type = message__get_type(message[0]);
@@ -146,8 +146,8 @@ void message__read(char *msg, int id, char* answer_buffer) {
         if (nb_args == 3
         && !strcmp(message[1], "in")
         && !strcmp(message[2], "as"))
-            message__hello_in_as_id(atoi(message[3]), id, answer_buffer);
-        else if (nb_args == 0) message__hello(id, answer_buffer);
+            message__hello_in_as_id(atoi(message[3]), socketfd, answer_buffer);
+        else if (nb_args == 0) message__hello(socketfd, answer_buffer);
         else message__bad_args("hello", answer_buffer);
         break;
 
@@ -164,7 +164,7 @@ void message__read(char *msg, int id, char* answer_buffer) {
         case LOG:
         if (nb_args == 1 
         && !strcmp(message[1], "out"))
-            message__log_out(id, answer_buffer);
+            message__log_out(socketfd, answer_buffer);
         else message__bad_args("log", answer_buffer);
         break;
 

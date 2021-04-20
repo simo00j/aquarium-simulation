@@ -1,7 +1,7 @@
 CFLAGS   = -Wall -Wextra 
 THREAD_FLAGS = -pthread
-CTL_PATH = Controleur/Src/
-TEST_CTL_PATH = Controleur/Tst/
+CTL_PATH = controleur/src/
+TEST_CTL_PATH = controleur/tst/
 
 BIN = server test_server
 

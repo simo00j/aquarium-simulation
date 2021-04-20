@@ -45,7 +45,7 @@ void command__default(char* answer_buffer) {
 
 void command__close_server(char* answer_buffer) {
     control_server__disconnect();
-    sprintf(answer_buffer, "\n\tServer déconnecté\n");
+    sprintf(answer_buffer, "\n\tDéconnexion du serveur\n");
 }
 
 void command__load(char* answer_buffer) {
