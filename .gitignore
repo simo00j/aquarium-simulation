@@ -1,0 +1,14 @@
+# Temporary files
+*~
+\#*
+
+# Compiled files
+*.o
+
+
+# Install folder
+affichage/out/
+
+# IntelliJ files
+.idea
+.vscode
