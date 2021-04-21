@@ -1,9 +1,9 @@
 CFLAGS   = -Wall -Wextra 
 THREAD_FLAGS = -pthread
-CTL_PATH = Controleur/Src/
-TEST_CTL_PATH = Controleur/Tst/
+CTL_PATH = controleur/src/
+TEST_CTL_PATH = controleur/tst/
 
-BIN = server test_server
+BIN = server test_server aqua_test
 
 .PHONY: all
 all: $(BIN)
@@ -42,6 +42,20 @@ fake_client.o:
 test_server.o:
 	gcc -o test_server.o -c ${TEST_CTL_PATH}test_server.c ${CFLAGS}
 
+
+fish.o:
+	gcc -o fish.o -c ${CTL_PATH}fish.c ${CFLAGS}
+
+
+aquarium.o:
+	gcc -o aquarium.o -c ${CTL_PATH}aquarium.c ${CFLAGS}
+
+aqua_test.o:
+	gcc -o aqua_test.o -c ${TEST_CTL_PATH}aqua_test.c ${CFLAGS}
+
+
+aqua_test: aqua_test.o fish.o aquarium.o
+	gcc -o aqua_test aqua_test.o fish.o aquarium.o
 launch_server: clean server
 	./server 45321
 

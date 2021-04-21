@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define waiting_time 5
 #define INPUT_MAX_SIZE 60
 #define COMMAND_MAX_SIZE 20
 #define MAX_NAME_SIZE 30
@@ -16,10 +17,6 @@
         if (DEBUG)                        \
             fprintf(stderr, __VA_ARGS__); \
     } while (0)
-
-
-
-
 
 
 typedef struct position
@@ -37,18 +34,14 @@ typedef struct size
 
 typedef struct fish
 {
-    char name[MAX_NAME_SIZE];
+    char *name;
     size size;
     position position;
-    pathWay path_function;
+    position (*path_function)(position);
 
 } fish;
 
-void addFish( char* name, ,size s, );
-void startFish(char* name);
-void delFish(char* name);
-void getFishes();
-void getFishesContinuously();
-
+// Create a new fish
+fish *newFish(char* name, position pos ,size s, position (*p)(position));
 
 #endif //__FISH__H__

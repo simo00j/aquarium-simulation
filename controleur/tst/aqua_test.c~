@@ -1,0 +1,32 @@
+#include "../src/aquarium.h"
+#include "../src/fish.h"
+
+
+position add(position p){
+    position np;
+    np.x = p.x + 1;
+    np.y = p.y + 1;
+
+    return np;
+}
+int main(int argc, char* argv[]){
+    aquarium* a = malloc(sizeof(aquarium*));
+    size s;
+    s.width = 20;
+    s.height = 20;
+    a->size = s;
+
+    char *name= "samaka";
+    size s2;
+    s2.width = 2;
+    s2.height = 2;
+    position pos;
+    pos.x = 10;
+    pos.y = 10;
+    addFish(name,pos,s2,position(*add)(position),a);
+    getFishes(a);
+    delFish(name,a);
+
+    return 0;
+
+}
