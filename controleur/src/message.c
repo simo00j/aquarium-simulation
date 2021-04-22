@@ -4,6 +4,7 @@
 
 #include "message.h"
 #include "control_client.h"
+#include "util.h"
 
 #define MSG_SIZE 128
 #define BUFFER_SIZE 256
@@ -22,7 +23,9 @@ typedef enum message_type{
     DEFAULT,
 } message_type;
 
-message_type message__get_type(char *cmd) {   
+message_type message__get_type(char *cmd) {  
+    if (cmd == NULL)
+        return DEFAULT;
     if (!strcmp(cmd, "hello")) 
         return HELLO;
     if (!strcmp(cmd, "getFishes")) 
@@ -44,22 +47,6 @@ message_type message__get_type(char *cmd) {
     if (!strcmp(cmd, "status")) 
         return STATUS;
     else return DEFAULT; 
-}
-
-void message__parser(char* parsed_msg[], char* msg) {
-    size_t l = strlen(msg);
-    msg[l-1] = ' ';
-    char* token;
-    token = strtok(msg, " "); 
-    if(token != NULL) {
-        parsed_msg[0] = token;
-        int args = 1;
-        while( token != NULL ) {
-            token = strtok(NULL, " ");
-            parsed_msg[args++] = token;
-        }
-        parsed_msg[args] = NULL;
-    }
 }
 
 void message__hello_in_as_id(int aquarium_id, int socketfd, char* answer_buffer) {
@@ -121,20 +108,15 @@ void message__bad_args(char* cmd, char* answer_buffer) {
     sprintf(answer_buffer, "Arguments non conformes pour la commande %s\n", cmd);
 }
 
-int count_args(char* message[]) {
-    int i = 1;
-    while(message[i] != NULL) {
-        i++;
-    } 
-    return i - 1;
-}
-
 void message__read(char *msg, int socketfd, char* answer_buffer) {
     char* message[MSG_SIZE];
-    message__parser(message, msg);
-    message_type type = message__get_type(message[0]);
-    int nb_args = count_args(message);
+    message_type type;
+    int nb_args;
 
+    util__parser(message, msg, " ");
+    type = message__get_type(message[0]);
+    nb_args = util__count_args(message);
+    
     switch (type) {
         case PING:
         if (nb_args == 1) 

@@ -16,26 +16,23 @@
 #include "command.h"
 #include "control_client.h"
 #include "control_server.h"
+#include "util.h"
 
 #define MAX_CLIENTS 50
-#define PING_TIMER 5 //ping every 100s
 #define BUFFER_SIZE 256
 
-void error(char *msg)
-{
-    perror(msg);
-    exit(1);
-}
 
 typedef struct thread_args_t {
     char* buffer;
     int sockfd;
+    int timeout;
 } thread_args_t;
 
 void* talk(void* args) {
     thread_args_t *arg = (thread_args_t*) args;
     char* buffer = arg->buffer;
     int sockfd = arg->sockfd;
+    int timeout = arg->timeout;
     int n, len_answer;
     char answer_buffer[BUFFER_SIZE];
 
@@ -46,8 +43,8 @@ void* talk(void* args) {
     time_out.tv_sec = 5;    // 10 seconds
     time_out.tv_usec = 0;    // 0 milliseconds
 
-    while (control_client__is_connected(sockfd) && control_server__is_connected()) {
-        time_out.tv_sec = PING_TIMER;    // 100 seconds 
+    while (control_client__is_connected(sockfd) && control_server__is_connected()) { 
+        time_out.tv_sec = timeout;    // 100 seconds 
         time_out.tv_usec = 0;
         int a = select(FD_SETSIZE,&readfds,NULL,NULL,&time_out);
         //if (a == -1) error("Error select");
@@ -57,26 +54,23 @@ void* talk(void* args) {
         }
 
         bzero(buffer, BUFFER_SIZE);
-        
+        bzero(answer_buffer, BUFFER_SIZE);
+
         n = read(sockfd, buffer, BUFFER_SIZE - 1);
         if (n < 0)
             error("ERROR reading from socket");
-
-        //printf("Here is the message by socket %d: %s\n", newsockfd, buffer);
-        
 
         message__read(buffer, sockfd, answer_buffer);
         len_answer = strlen(answer_buffer);
         
         signal(SIGPIPE, SIG_IGN); // voir avec sigaction
         n = write(sockfd, answer_buffer, len_answer);
-
         if (n < 0) {
-            //printf("\n\nSocket %d left\n\n Commmand: ", newsockfd);
             return (void*) 0;
         }
     }
     //close(sockfd);
+
     return (void*) 0;
 }
 
@@ -98,7 +92,7 @@ void* server_interface(void* args) {
     return (void*) 0;
 }
 
-int launch_server(int portno)
+int launch_server(int portno, int timeout) 
 {
     int sockfd, newsockfd, clilen;
     char buffer[BUFFER_SIZE];
@@ -107,15 +101,16 @@ int launch_server(int portno)
     pthread_t thread[MAX_CLIENTS];
     pthread_t thread_server;
     int nb_client = 0;
-        
-        fd_set readfds;
-        struct timeval time_out;
-        FD_ZERO(&readfds);
+    /*    
+    fd_set readfds;
+    struct timeval time_out;
+    FD_ZERO(&readfds);
   //    FD_ZERO(&writefds);
         
 
-        time_out.tv_sec = 10;    // 10 seconds
-        time_out.tv_usec = 0;    // 0 milliseconds
+    time_out.tv_sec = 10;    // 10 seconds
+    time_out.tv_usec = 0;    // 0 milliseconds
+    */
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0)
         error("ERROR opening socket");
@@ -134,12 +129,15 @@ int launch_server(int portno)
 
     control_server__connect();
     pthread_create(&thread_server, NULL, server_interface, NULL);
-    FD_SET(sockfd,&readfds);
-    
+    //FD_SET(sockfd,&readfds);
+    //int i = 0;
     while(control_server__is_connected()) {
+        /*
         int a = select(FD_SETSIZE,&readfds,NULL,NULL,&time_out);
         //if (a == -1) error("Error select");
         if (a == 0) {
+            
+            printf("%d\n", i++);
             if (!control_server__is_connected())
                 break;
             else {
@@ -148,7 +146,7 @@ int launch_server(int portno)
                 continue;
             }
         }
-
+       */
         newsockfd = accept(sockfd,
                         (struct sockaddr *)&cli_addr,
                         (socklen_t *)&clilen);
@@ -157,10 +155,11 @@ int launch_server(int portno)
             error("ERROR on accept");
 
         control_client__connect(newsockfd);
-
+        
         thread_args = malloc(sizeof(thread_args_t));
         thread_args->buffer = buffer;
         thread_args->sockfd = newsockfd;
+        thread_args->timeout = timeout;
 
         pthread_create(&thread[nb_client], NULL, talk, thread_args);
         nb_client++;

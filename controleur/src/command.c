@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "command.h"
-#include "message.h"
+#include "util.h"
 #include "control_server.h"
 
 #define CMD_SIZE 128
@@ -70,9 +70,9 @@ void command__save(char* answer_buffer) {
 
 void command__read(char *cmd, char* answer_buffer) {
     char* command[CMD_SIZE];
-    message__parser(command, cmd);
+    util__parser(command, cmd, " ");
     command_type type = command__get_type(command[0]);
-    int nb_args = count_args(command);
+    int nb_args = util__count_args(command);
 
     switch (type) {
         case CLOSE:
