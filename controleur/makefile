@@ -4,13 +4,13 @@ SRC_PATH = src/
 TEST_PATH = tst/
 BUILD_PATH = build/
 
-BIN = server test_server aqua_test
+BIN = server test_server aqua_test 
 
 .PHONY: all
 all: $(BIN)
 
-server: launch_server.o server.o message.o control_client.o control_server.o command.o config.o util.o
-	gcc -o server ${BUILD_PATH}launch_server.o ${BUILD_PATH}server.o ${BUILD_PATH}message.o ${BUILD_PATH}control_client.o ${BUILD_PATH}control_server.o ${BUILD_PATH}command.o ${BUILD_PATH}config.o ${BUILD_PATH}util.o ${THREAD_FLAGS}
+server: launch_server.o server.o message.o control_client.o control_server.o command.o config.o util.o fish.o aquarium.o
+	gcc -o server ${BUILD_PATH}launch_server.o ${BUILD_PATH}server.o ${BUILD_PATH}message.o ${BUILD_PATH}control_client.o ${BUILD_PATH}control_server.o ${BUILD_PATH}command.o ${BUILD_PATH}config.o ${BUILD_PATH}util.o ${BUILD_PATH}fish.o ${BUILD_PATH}aquarium.o ${THREAD_FLAGS}
 
 %.o: ${SRC_PATH}%.c build
 	gcc -o ${BUILD_PATH}$@ -c $< ${CFLAGS}

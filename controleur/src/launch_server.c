@@ -83,6 +83,7 @@ void* server_interface(void* args) {
     while(control_server__is_connected()){
         printf("Commande: ");
         bzero(buffer, BUFFER_SIZE);
+        bzero(answer_buffer, BUFFER_SIZE);
         fgets(buffer, BUFFER_SIZE - 1, stdin);
         
         command__read(buffer, answer_buffer);

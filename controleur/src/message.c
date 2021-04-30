@@ -5,6 +5,7 @@
 #include "message.h"
 #include "control_client.h"
 #include "util.h"
+#include "aquarium.h"
 
 #define MSG_SIZE 128
 #define BUFFER_SIZE 256
@@ -79,9 +80,36 @@ void message__ping(int ping, char* answer_buffer) {
 void message__status(char* answer_buffer) {
     sprintf(answer_buffer, "Connecté au control_clienteur\n");
 }
+position add(position p){
+    position np;
+    np.x = p.x + 1;
+    np.y = p.y + 1;
 
+    return np;
+}
 void message__add_fish(char* answer_buffer) {
-    sprintf(answer_buffer, "Pas encore implémenté\n");
+    aquarium* a = malloc(sizeof(aquarium*));
+    
+    size s;
+    s.width = 20;
+    s.height = 20;
+    a->size = s;
+    a->fish_number = 0;
+    a->views_number = 0;
+    a->fish = malloc(sizeof(fish**));
+    
+    char *name= "samaka";
+    size s2;
+    s2.width = 2;
+    s2.height = 2;
+    position pos;
+    pos.x = 10;
+    pos.y = 10;
+
+    int added = addFish(name,pos,s2,add,a);
+    if(added)
+        sprintf(answer_buffer, "OK\n");
+    else sprintf(answer_buffer, "NOK : modèle de mobilité non supporté\n");
 }
 
 void message__del_fish(char* answer_buffer) {

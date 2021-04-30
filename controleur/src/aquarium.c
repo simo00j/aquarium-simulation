@@ -1,4 +1,7 @@
 #include "aquarium.h"
+#include <string.h>
+
+aquarium* aq = NULL;
 
 void exitIf(int cond, char *err)
 {
@@ -9,42 +12,50 @@ void exitIf(int cond, char *err)
     }
 }
 
-aquarium *getDataFromFile(char *filepath)
-{
-    DEBUG_OUT("DEBUG : Start of getDataFromFile\n");
-    aquarium *aq = malloc(sizeof(aquarium));
-    aq->views_number = 0;
-    FILE *f = fopen(filepath, "r");
-    if (!f)
-    {
-        DEBUG_OUT("Couldn't open the input file");
+void print_aquarium(aquarium* a){
+    if(a != NULL) {
+        printf("Size: %d x %d\n\n", a->size.width, a->size.height);
+        printf("Views:\n");
+        for (int i = 0; i < a->views_number; i++) {
+            printf("\t%s %dx%d+%d+%d\n", a->views[i]->name, a->views[i]->position.x, a->views[i]->position.y, a->views[i]->size.width, a->views[i]->size.height);
+        }
     }
+}
 
+//TODO
+int get_aquarium_data(char* buffer) {
+    if(aq == NULL) 
+        return 0;
+    return 1;
+}
+
+aquarium* loadDataFromFile(FILE *f)
+{
+    aq = malloc(sizeof(aquarium));
+    aq->views_number = 0;
     fscanf(f, "%dx%d\n", &(aq->size.width), &(aq->size.height));
-    aq->views = malloc(sizeof(view *));
-    view *
-        fv;
+
     while (!feof(f))
     {
-        fv = malloc(sizeof(*fv));
+        view* fv = malloc(sizeof(fv));
         fscanf(f, "%s %dx%d+%d+%d", fv->name, &(fv->position.x), &(fv->position.y), &(fv->size.width), &(fv->size.height));
         aq->views[aq->views_number] = malloc(sizeof(view));
         aq->views[aq->views_number] = fv;
         aq->views_number++;
     }
-
-    fclose(f);
-    DEBUG_OUT("DEBUG : End of getDataFromFile\n");
     return aq;
 }
 
+aquarium* get_aquarium() {
+    return aq;
+}
 
 aquarium* newAquarium(size s){
     aquarium *a = malloc(sizeof(aquarium*));
     a->size = s;
     a->fish = malloc(sizeof(fish**));
     a->fish_number = 0;
-    a->views = malloc(sizeof(view**));
+    //a->views = malloc(sizeof(view**));
     a->views_number = 0;
 
     return a;
@@ -64,17 +75,18 @@ int containsfish(aquarium *a ,char * name ){
     return -1;
 }
 
-void addFish( char* name, position pos, size s, position(*p)(position), aquarium *a ){
+int addFish( char* name, position pos, size s, position(*p)(position), aquarium *a ){
 
     if (containsfish(a,name)!=-1){
-        printf("NOK");
+        //printf("NOK");
+        return 0;
     }else{
         fish *f = newFish(name,pos,s,p);
         a->fish[a->fish_number] = f;
         a->fish_number++;
-        printf("OK");
+        //printf("OK");
+        return 1;
     }
-    return;
 }
 
 void update_aquarium(aquarium* a){

@@ -5,8 +5,10 @@
 #include "command.h"
 #include "util.h"
 #include "control_server.h"
+#include "aquarium.h"
 
 #define CMD_SIZE 128
+#define AQUA_DATA_PATH "data/"
 
 typedef enum command_type{
     CLOSE,
@@ -48,12 +50,31 @@ void command__close_server(char* answer_buffer) {
     sprintf(answer_buffer, "\n\tDéconnexion du serveur\n");
 }
 
-void command__load(char* answer_buffer) {
-    sprintf(answer_buffer, "\nCommande existante non implémentée\n");
+void command__load(char* aquarium, char* answer_buffer) {
+    char path[64];
+    struct aquarium *aq;
+
+    sprintf(path, "%s%s.txt", AQUA_DATA_PATH, aquarium);
+    FILE *f = fopen(path, "r");
+    if (!f) {
+        sprintf(answer_buffer, "\n\tAquarium %s introuvable \n\tL'aquarium doit être enregistré dans le dossier data/ sous la forme: %s.txt\n", aquarium, aquarium);
+        return; 
+    }
+    aq = loadDataFromFile(f);
+    if(aq == NULL) 
+            sprintf(answer_buffer, "\n\tChargement impossible\n");
+    else sprintf(answer_buffer, "\n\tChargement de l'aquarium effectué\n");
+    fclose(f);
 }
 
 void command__show(char* answer_buffer) {
-    sprintf(answer_buffer, "\nCommande existante non implémentée\n");
+    char buffer[CMD_SIZE];
+    int aq = get_aquarium_data(buffer);
+    if (aq == 0) {
+        sprintf(answer_buffer, "\n\tAucun aquarium n'a été initialisé\n\tUn aquarium peut être initialisé grace à la commande:\n\t\tload aquarium<n>\n");
+        return;
+    }
+    sprintf(answer_buffer, "\n%s\n", buffer);
 }
 
 void command__add(char* answer_buffer) {
@@ -83,7 +104,9 @@ void command__read(char *cmd, char* answer_buffer) {
         break;
 
         case LOAD:
-        command__load(answer_buffer);
+        if (nb_args == 1)
+            command__load(command[1], answer_buffer);
+        else command__bad_args("load aquarium<n>", answer_buffer);
         break;
 
         case SHOW:

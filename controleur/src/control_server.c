@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "control_client.h"
+#include "control_server.h"
 
 int server_connected = 0;
 

@@ -4,6 +4,8 @@
 #include "fish.h"
 #include <unistd.h>
 
+#define MAX_VIEWS 32
+
 typedef struct view
 {
     char name[3];
@@ -16,11 +18,15 @@ typedef struct aquarium
     size size;
     fish **fish;
     int fish_number;
-    view **views;
+    view *views[MAX_VIEWS];
     int views_number; 
 } aquarium;
 
-aquarium *getDataFromFile(char *filepath);
+aquarium* loadDataFromFile(FILE *f);
+
+aquarium* get_aquarium();
+
+int get_aquarium_data(char* buffer);
 
 // Create a new aquarium with an empty lists of fish and views
 aquarium* newAquarium(size s);
@@ -32,7 +38,7 @@ void delAquarium(aquarium *a);
 void update_aquarium(aquarium* a);
 
 // Add new fish to the aquarium
-void addFish( char* name, position pos, size s, position (*p)(position), aquarium *a );
+int addFish( char* name, position pos, size s, position (*p)(position), aquarium *a );
 
 // Delete a fish from the aquarium
 void delFish(char* name, aquarium *a);
