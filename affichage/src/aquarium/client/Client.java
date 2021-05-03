@@ -1,20 +1,19 @@
 package aquarium.client;
-import aquarium.gui.Fish;
-import javafx.scene.layout.Pane;
+
+import aquarium.Config;
 
 import java.io.*;
 import java.net.*;
-import java.util.Random;
 
 public class Client {
     private Socket socket = null;
     public PrintWriter out = null;
     public BufferedReader in = null;
 
-    public Client(String ip, int port) {
+    public Client() {
         try {
-            this.socket = new Socket(InetAddress.getByName(ip), port);
-            System.out.println("Connected to server "+ InetAddress.getByName(ip) + " on port " + port);
+            this.socket = new Socket(InetAddress.getByName( Config.properties.getProperty("controller-address")), Integer.parseInt(Config.properties.getProperty("controller-port")));
+            System.out.println("Connected to server "+ InetAddress.getByName( Config.properties.getProperty("controller-address")) + " on port " + Integer.parseInt(Config.properties.getProperty("controller-port")));
             this.out = new PrintWriter(this.socket.getOutputStream(), true);
             this.in = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
         }catch (IOException e){

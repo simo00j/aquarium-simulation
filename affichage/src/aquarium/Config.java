@@ -9,7 +9,7 @@ public class Config {
     static {
         try {
             properties = new Properties();
-            properties.load(new FileInputStream("config.ini"));
+            properties.load(new FileInputStream("affichage.cfg"));
         } catch (IOException e) {
             e.printStackTrace();
         }
