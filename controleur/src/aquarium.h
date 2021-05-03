@@ -26,7 +26,7 @@ aquarium* loadDataFromFile(FILE *f);
 
 aquarium* get_aquarium();
 
-int get_aquarium_data(char* buffer);
+int get_aquarium_data();
 
 // Create a new aquarium with an empty lists of fish and views
 aquarium* newAquarium(size s);
@@ -54,5 +54,11 @@ void ls(aquarium *a);
 
 // Start fish in the aquarium
 void startFish(char* name, aquarium *a);
+
+// Add new view to the aquarium
+int addView( char name[], position pos, size s, aquarium *a );
+
+// Delete a view from the aquarium
+int delView(char name[], aquarium *a);
 
 #endif //__AQUARIUM__H__

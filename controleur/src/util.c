@@ -27,6 +27,20 @@ void util__parser(char* parsed_msg[], char* msg, char* sep) {
     }
 }
 
+void myParser(char* parsed_msg[], char* msg, char* sep) {
+    char* token;
+    token = strtok(msg, sep); 
+    if(token != NULL) {
+        parsed_msg[0] = token;
+        int args = 1;
+        while( token != NULL ) {
+            token = strtok(NULL, sep);
+            parsed_msg[args++] = token;
+        }
+        parsed_msg[args] = NULL;
+    }
+}
+
 int util__count_args(char* message[]) {
     int i = 1;
     while(message[i] != NULL) {

@@ -23,7 +23,7 @@ void print_aquarium(aquarium* a){
 }
 
 //TODO
-int get_aquarium_data(char* buffer) {
+int get_aquarium_data() {
     if(aq == NULL) 
         return 0;
     return 1;
@@ -77,7 +77,7 @@ int containsfish(aquarium *a ,char * name ){
 
 int addFish( char* name, position pos, size s, position(*p)(position), aquarium *a ){
 
-    if (containsfish(a,name)!=-1){
+    if (containsfish(a,name) ==-1){
         //printf("NOK");
         return 0;
     }else{
@@ -87,6 +87,50 @@ int addFish( char* name, position pos, size s, position(*p)(position), aquarium 
         //printf("OK");
         return 1;
     }
+}
+
+
+int containsView(aquarium* a, char name[]){
+    
+    for (int i=0; i < a->views_number ;i++){
+        if (strcmp(a->views[i]->name, name) == 0)
+            return i;
+    }
+    return -1;
+}
+
+view* newView(char name[], position pos, size s){
+    view *v = malloc(sizeof(view*));
+    strcpy(v->name, name);
+    v->position = pos;
+    v->size = s;
+
+    return v;
+}
+
+int addView(char name[], position pos, size s, aquarium* a){
+ 
+    if(containsView(a, name) == -1 && a->views_number < MAX_VIEWS){
+        view *v = newView(name, pos, s);
+        a->views[a->views_number] = v;
+        a->views_number++;
+        return 1;
+    }
+
+    return 0;
+}
+
+int delView(char name[], aquarium *a){
+    
+    int n = containsView(a, name);
+    if( n != -1){
+        for(int i = n; i < a->views_number - 1; i++)
+            a->views[i] = a->views[i+1];
+        a->views_number--;
+        return 1;
+    }
+
+    return 0;
 }
 
 void update_aquarium(aquarium* a){
@@ -136,10 +180,10 @@ void delFish(char* name, aquarium *a){
     return;
 }
 
-void startFish(char* name, aquarium *a){   
+/*void startFish(char* name, aquarium *a){   
     printf("OK");
 }
-
+*/
 /*int main()
 {
     aquarium *aq = getDataFromFile("aquarium1.txt");
