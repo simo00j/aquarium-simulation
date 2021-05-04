@@ -7,7 +7,7 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        Connection connection = new Connection();
+        Connection connection = new Connection(primaryStage);
         connection.launch();
     }
     public static void main(String[] args) {
