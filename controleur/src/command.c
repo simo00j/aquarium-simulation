@@ -84,6 +84,13 @@ void command__show() {
 
 void command__add(char** command) {
     
+    char buffer[CMD_SIZE];
+    int aq = get_aquarium_data(buffer);
+    if (aq == 0) {
+        printf("\n\tAucun aquarium n'a été initialisé\n\tUn aquarium peut être initialisé grace à la commande:\n\t\tload aquarium<n>\n");
+        return;
+    }
+
     int nb_args = util__count_args(command);
     if(nb_args == 3 && strcmp(command[1], "view") == 0){
         char name[3];
@@ -111,6 +118,13 @@ void command__add(char** command) {
 
 void command__del(char** command) {
 
+    char buffer[CMD_SIZE];
+    int aq = get_aquarium_data(buffer);
+    if (aq == 0) {
+        printf("\n\tAucun aquarium n'a été initialisé\n\tUn aquarium peut être initialisé grace à la commande:\n\t\tload aquarium<n>\n");
+        return;
+    }
+
     int nb_args = util__count_args(command);
     if(nb_args == 2 && strcmp(command[1], "view") == 0){
         aquarium *a = get_aquarium();
@@ -122,23 +136,38 @@ void command__del(char** command) {
 
     }
     else
-        printf("view %s can not be deleted\n", command[2]);
+        printf("view can not be deleted\n");
 }
 
 void command__save() {
+
+    char buffer[CMD_SIZE];
+    int aq = get_aquarium_data(buffer);
+    if (aq == 0) {
+        printf("\n\tAucun aquarium n'a été initialisé\n\tUn aquarium peut être initialisé grace à la commande:\n\t\tload aquarium<n>\n");
+        return;
+    }
 
     FILE *f = fopen(path, "w+");
     aquarium *a = get_aquarium();
     char s[40];
     sprintf(s, "%dx%d\n", a->size.width, a->size.height);
     fputs(s, f);
-    for(int i = 0; i < a->views_number; i++){
+    int i;
+    for(i = 0; i < a->views_number - 1; i++){
         view *v = a->views[i];
         sprintf(s, "%s %dx%d+%d+%d\n", v->name, v->size.width, v->size.height, v->position.x, v->position.y);
         fputs(s, f);
     }
+
+    if(i > -1){
+        view *v = a->views[i];
+        sprintf(s, "%s %dx%d+%d+%d", v->name, v->size.width, v->size.height, v->position.x, v->position.y);
+        fputs(s, f);
+    }
     
     fclose(f);
+
     printf("aquarium saved! (%d display views)", a->views_number);    
 }
 
