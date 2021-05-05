@@ -2,10 +2,7 @@ package aquarium.parse;
 
 import aquarium.Config;
 import aquarium.Connection;
-import aquarium.gui.Fish;
-
 import java.io.IOException;
-import java.util.LinkedList;
 
 public class ParseServerIncoming implements Runnable {
 
@@ -18,21 +15,22 @@ public class ParseServerIncoming implements Runnable {
     @Override
     public void run() {
         String scanned;
-        Parser p = new Parser();
 
         try {
-            while (true) {
+            while (this.connection.client.getSocket().isConnected()) {
                 scanned = this.connection.client.in.readLine();
                 //System.out.println("< " + scanned);
                 if (scanned.startsWith("list")) {
-                    LinkedList<Fish> fishList = p.parseFishList(scanned);
-                    fishList.forEach(f -> this.connection.addFish(f));
+                    Parser.parseFishList(scanned, connection);
+                    System.out.println("< " + scanned);
                 } else if (scanned.startsWith("OK") || scanned.startsWith("NOK") || scanned.startsWith("pong")) {
                     ParseUserInput.getListCommands().removeFirst();
                 } else if (scanned.startsWith("bye") || scanned.startsWith("no greeting")) {
+                    System.out.println("< " + scanned);
                     this.connection.endConnection();
                 } else if (scanned.startsWith("greeting")) {
-                    p.parseGreeting(scanned);
+                    System.out.println("< " + scanned);
+                    Parser.parseGreeting(scanned);
                 }
             }
         }

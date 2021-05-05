@@ -1,9 +1,8 @@
-package aquarium;
+package aquarium.client;
 
+import aquarium.Config;
 import aquarium.parse.ParseUserInput;
-
 import java.io.PrintWriter;
-import java.util.LinkedList;
 
 public class Ping implements Runnable {
     public final PrintWriter out;
@@ -14,7 +13,7 @@ public class Ping implements Runnable {
     @Override
     public void run() {
         try {
-            String pingString = new String("ping " + Config.properties.getProperty("controller-port"));
+            String pingString = "ping " + Config.properties.getProperty("controller-port");
             while (true){
                 synchronized (this.out) {
                     Thread.sleep (Integer.parseInt(Config.properties.getProperty("display-timeout-value")));

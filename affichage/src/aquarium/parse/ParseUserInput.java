@@ -1,29 +1,32 @@
 package aquarium.parse;
 
+import aquarium.Connection;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.LinkedList;
 
 public class ParseUserInput implements Runnable {
     final private BufferedReader stdIn;
-    final private PrintWriter out;
     public static LinkedList<String> commandsList;
+    final private Connection connection;
 
-    public ParseUserInput(BufferedReader in, PrintWriter out) {
+    public ParseUserInput(BufferedReader in, Connection c) {
         this.stdIn = in;
-        this.out = out;
-        commandsList = new LinkedList<>();
+        this.commandsList = new LinkedList<>();
+        this.connection = c;
     }
 
     @Override
     public void run() {
-        String userInput;
+        String scanned;
         try {
-            while ((userInput = stdIn.readLine()) != null) {
-                commandsList.add(userInput);
-                out.println(userInput);
-                out.flush();
+            while ((scanned = stdIn.readLine()) != null) {
+                commandsList.add(scanned);
+                if (scanned.startsWith("addFish")){
+                    Parser.parseAddFish(scanned, this.connection);
+                }
+                this.connection.client.out.println(scanned);
+                this.connection.client.out.flush();
             }
         } catch (IOException e) {
             e.printStackTrace();
