@@ -1,7 +1,6 @@
 package aquarium.client;
 
 import aquarium.Config;
-import aquarium.parse.ParseUserInput;
 import java.io.PrintWriter;
 
 public class Ping implements Runnable {
@@ -18,11 +17,9 @@ public class Ping implements Runnable {
                 synchronized (this.out) {
                     Thread.sleep (Integer.parseInt(Config.properties.getProperty("display-timeout-value")));
                     this.out.println(pingString);
-                    ParseUserInput.getListCommands().add(pingString);
                     this.out.flush();
                 }
             }
-
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

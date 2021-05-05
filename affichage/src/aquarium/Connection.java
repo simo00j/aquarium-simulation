@@ -3,9 +3,9 @@ package aquarium;
 import aquarium.client.Client;
 import aquarium.client.Ping;
 import aquarium.gui.Fish;
+import aquarium.gui.Prompt;
 import aquarium.gui.Viewer;
 import aquarium.parse.ParseServerIncoming;
-import aquarium.parse.ParseUserInput;
 import aquarium.parse.Parser;
 import javafx.application.Platform;
 import javafx.stage.Stage;
@@ -15,6 +15,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.stream.Collectors;
 
 public class Connection {
@@ -22,12 +23,18 @@ public class Connection {
     public Client client;
     public ArrayList<Fish> fishList = new ArrayList<>();
     public BufferedReader stdIn;
+    public Prompt prompt;
+    public LinkedList<String> commandsList;
     //public static final Logger logger = Logger.getLogger(Connection.class.getName());
 
     public Connection(Stage primaryStage) {
+        this.commandsList = new LinkedList<>();
         this.client = new Client();
         this.stdIn = new BufferedReader(new InputStreamReader(System.in));
-        this.client.out.println("hello");
+
+        initializeConnection();
+
+        this.prompt = new Prompt(this);
         primaryStage.setOnCloseRequest(e -> {
             endConnection();
             Platform.exit();
@@ -53,9 +60,9 @@ public class Connection {
         pingThread.setDaemon(true);
         pingThread.start();
 
-        Thread userInputThread = new Thread(new ParseUserInput(this.stdIn, this));
-        userInputThread.setDaemon(true);
-        userInputThread.start();
+        Thread promptThread = new Thread(new Prompt(this));
+        promptThread.setDaemon(true);
+        promptThread.start();
 
         Thread ServerIncomingThread = new Thread(new ParseServerIncoming(this));
         ServerIncomingThread.setDaemon(true);
@@ -74,14 +81,32 @@ public class Connection {
         }
     }
 
+    public void startFish(String name){
+        for (Fish f : fishList){
+            if (f.getName().equals(name)) {
+                f.move();
+                break;
+            }
+        }
+    }
+
+    public void startFish(Fish fish){
+        fish.move();
+    }
+
     public void startFish(){
         for (Fish f : fishList){
             f.move();
         }
     }
 
-    public void startFish(Fish fish){
-        fish.move();
+    public void delFish(String name){
+        for (Fish f : fishList){
+            if (f.getName().equals(name)) {
+                fishList.remove(f);
+                break;
+            }
+        }
     }
 
     public void endConnection() {
@@ -90,5 +115,17 @@ public class Connection {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void initializeConnection() {
+        if (Config.properties.getProperty("id") != null) {
+            this.client.out.println("hello in as " + Config.properties.getProperty("id"));
+        } else {
+            this.client.out.println("hello");
+        }
+        commandsList.add("hello");
+        this.client.out.println("getFishes");
+        commandsList.add("getFishes");
+
     }
 }

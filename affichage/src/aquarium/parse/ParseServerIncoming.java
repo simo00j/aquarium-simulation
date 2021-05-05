@@ -14,23 +14,33 @@ public class ParseServerIncoming implements Runnable {
 
     @Override
     public void run() {
-        String scanned;
-
         try {
             while (this.connection.client.getSocket().isConnected()) {
-                scanned = this.connection.client.in.readLine();
-                //System.out.println("< " + scanned);
+                final String scanned = this.connection.client.in.readLine();
                 if (scanned.startsWith("list")) {
-                    Parser.parseFishList(scanned, connection);
-                    System.out.println("< " + scanned);
-                } else if (scanned.startsWith("OK") || scanned.startsWith("NOK") || scanned.startsWith("pong")) {
-                    ParseUserInput.getListCommands().removeFirst();
+                    if (connection.commandsList.getFirst().equals("getFishesContinuously")) {
+                        Parser.parseFishList(scanned, connection);
+                    } else if (connection.commandsList.getFirst().equals("getFishes")) {
+                        Parser.parseGetFishes(scanned, connection);
+                    }
                 } else if (scanned.startsWith("bye") || scanned.startsWith("no greeting")) {
-                    System.out.println("< " + scanned);
+                    System.out.println(scanned);
                     this.connection.endConnection();
+                    System.exit(0);
                 } else if (scanned.startsWith("greeting")) {
-                    System.out.println("< " + scanned);
                     Parser.parseGreeting(scanned);
+                } else if (scanned.startsWith("\t->OK")) {
+                    this.connection.prompt.addResponse(scanned);
+                } else if (scanned.startsWith("OK")) {
+                    this.connection.commandsList.getFirst();
+                    String command = this.connection.commandsList.getFirst();
+                    if (command.startsWith("addFish")) {
+                        Parser.parseAddFish(command, this.connection);
+                    } else if (command.startsWith("delFish")) {
+                        this.connection.delFish(command.split("\\s")[1]);
+                    } else if (command.startsWith("startFish")) {
+                        this.connection.startFish(command.split("\\s")[1]);
+                    }
                 }
             }
         }

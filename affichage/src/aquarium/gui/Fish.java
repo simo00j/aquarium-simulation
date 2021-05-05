@@ -15,7 +15,7 @@ public class Fish {
     private Duration duration;
     private Point position;
     private Point destination;
-    private Path path;
+    final private Path path;
     final private PathTransition pathTransition;
     String name;
 
@@ -56,6 +56,8 @@ public class Fish {
     }
 
     public Duration getDuration() { return this.duration; }
+
+    public Point getPosition() { return this.position; }
 
     public Point getDestination() { return this.destination; }
 
