@@ -4,6 +4,8 @@
 
 #include "message.h"
 #include "control_client.h"
+#include "util.h"
+#include "aquarium.h"
 
 #define MSG_SIZE 128
 #define BUFFER_SIZE 256
@@ -22,7 +24,9 @@ typedef enum message_type{
     DEFAULT,
 } message_type;
 
-message_type message__get_type(char *cmd) {   
+message_type message__get_type(char *cmd) {  
+    if (cmd == NULL)
+        return DEFAULT;
     if (!strcmp(cmd, "hello")) 
         return HELLO;
     if (!strcmp(cmd, "getFishes")) 
@@ -46,31 +50,15 @@ message_type message__get_type(char *cmd) {
     else return DEFAULT; 
 }
 
-void message__parser(char* parsed_msg[], char* msg) {
-    size_t l = strlen(msg);
-    msg[l-1] = ' ';
-    char* token;
-    token = strtok(msg, " "); 
-    if(token != NULL) {
-        parsed_msg[0] = token;
-        int args = 1;
-        while( token != NULL ) {
-            token = strtok(NULL, " ");
-            parsed_msg[args++] = token;
-        }
-        parsed_msg[args] = NULL;
-    }
-}
-
-void message__hello_in_as_id(int aquarium_id, int id, char* answer_buffer) {
-    int new_aquarium_id = control_client__set_aquarium_id_named(aquarium_id, id);
+void message__hello_in_as_id(int aquarium_id, int socketfd, char* answer_buffer) {
+    int new_aquarium_id = control_client__set_aquarium_id_named(aquarium_id, socketfd);
     if (new_aquarium_id > -1)
         sprintf(answer_buffer, "gretting %d\n", new_aquarium_id);
     else sprintf(answer_buffer, "no gretting\n");
 }
 
-void message__hello(int id, char* answer_buffer) {
-    int new_aquarium_id = control_client__set_aquarium_id(id);
+void message__hello(int socketfd, char* answer_buffer) {
+    int new_aquarium_id = control_client__set_aquarium_id(socketfd);
     if (new_aquarium_id > -1)
         sprintf(answer_buffer, "gretting %d\n", new_aquarium_id);
     else sprintf(answer_buffer, "no gretting\n");
@@ -80,8 +68,8 @@ void message__getFishes(char* answer_buffer) {
     sprintf(answer_buffer, "list [PoissonRouge at 90x4,10x4,5] [PoissonClown at 20x80,12x6,5]\n");
 }
 
-void message__log_out(int id, char* answer_buffer) {
-    control_client__disconnect(id);
+void message__log_out(int socketfd, char* answer_buffer) {
+    control_client__disconnect(socketfd);
     sprintf(answer_buffer, "bye\n");
 }
 
@@ -92,9 +80,36 @@ void message__ping(int ping, char* answer_buffer) {
 void message__status(char* answer_buffer) {
     sprintf(answer_buffer, "Connecté au control_clienteur\n");
 }
+position add(position p){
+    position np;
+    np.x = p.x + 1;
+    np.y = p.y + 1;
 
+    return np;
+}
 void message__add_fish(char* answer_buffer) {
-    sprintf(answer_buffer, "Pas encore implémenté\n");
+    aquarium* a = malloc(sizeof(aquarium*));
+    
+    size s;
+    s.width = 20;
+    s.height = 20;
+    a->size = s;
+    a->fish_number = 0;
+    a->views_number = 0;
+    a->fish = malloc(sizeof(fish**));
+    
+    char *name= "samaka";
+    size s2;
+    s2.width = 2;
+    s2.height = 2;
+    position pos;
+    pos.x = 10;
+    pos.y = 10;
+
+    int added = addFish(name,pos,s2,add,a);
+    if(added)
+        sprintf(answer_buffer, "OK\n");
+    else sprintf(answer_buffer, "NOK : modèle de mobilité non supporté\n");
 }
 
 void message__del_fish(char* answer_buffer) {
@@ -121,20 +136,15 @@ void message__bad_args(char* cmd, char* answer_buffer) {
     sprintf(answer_buffer, "Arguments non conformes pour la commande %s\n", cmd);
 }
 
-int count_args(char* message[]) {
-    int i = 1;
-    while(message[i] != NULL) {
-        i++;
-    } 
-    return i - 1;
-}
-
-void message__read(char *msg, int id, char* answer_buffer) {
+void message__read(char *msg, int socketfd, char* answer_buffer) {
     char* message[MSG_SIZE];
-    message__parser(message, msg);
-    message_type type = message__get_type(message[0]);
-    int nb_args = count_args(message);
+    message_type type;
+    int nb_args;
 
+    util__parser(message, msg, " ");
+    type = message__get_type(message[0]);
+    nb_args = util__count_args(message);
+    
     switch (type) {
         case PING:
         if (nb_args == 1) 
@@ -146,8 +156,8 @@ void message__read(char *msg, int id, char* answer_buffer) {
         if (nb_args == 3
         && !strcmp(message[1], "in")
         && !strcmp(message[2], "as"))
-            message__hello_in_as_id(atoi(message[3]), id, answer_buffer);
-        else if (nb_args == 0) message__hello(id, answer_buffer);
+            message__hello_in_as_id(atoi(message[3]), socketfd, answer_buffer);
+        else if (nb_args == 0) message__hello(socketfd, answer_buffer);
         else message__bad_args("hello", answer_buffer);
         break;
 
@@ -164,7 +174,7 @@ void message__read(char *msg, int id, char* answer_buffer) {
         case LOG:
         if (nb_args == 1 
         && !strcmp(message[1], "out"))
-            message__log_out(id, answer_buffer);
+            message__log_out(socketfd, answer_buffer);
         else message__bad_args("log", answer_buffer);
         break;
 

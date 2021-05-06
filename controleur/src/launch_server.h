@@ -1,1 +1,1 @@
-int launch_server(int portno);
+int launch_server(int portno, int timeout);

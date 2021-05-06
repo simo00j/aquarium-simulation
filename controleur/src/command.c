@@ -3,10 +3,14 @@
 #include <string.h>
 
 #include "command.h"
-#include "message.h"
+#include "util.h"
 #include "control_server.h"
+#include "aquarium.h"
 
 #define CMD_SIZE 128
+#define AQUA_DATA_PATH "data/"
+static char path[64];
+
 
 typedef enum command_type{
     CLOSE,
@@ -45,34 +49,133 @@ void command__default(char* answer_buffer) {
 
 void command__close_server(char* answer_buffer) {
     control_server__disconnect();
-    sprintf(answer_buffer, "\n\tServer déconnecté\n");
+    sprintf(answer_buffer, "\n\tDéconnexion du serveur\n");
 }
 
-void command__load(char* answer_buffer) {
-    sprintf(answer_buffer, "\nCommande existante non implémentée\n");
+void command__load(char* aquarium, char* answer_buffer) {
+    struct aquarium *aq;
+    sprintf(path, "%s%s.txt", AQUA_DATA_PATH, aquarium);
+    FILE *f = fopen(path, "r");
+    if (!f) {
+        sprintf(answer_buffer, "\n\tAquarium %s introuvable \n\tL'aquarium doit être enregistré dans le dossier data/ sous la forme: %s.txt\n", aquarium, aquarium);
+        return; 
+    }
+    aq = loadDataFromFile(f);
+    if(aq == NULL) 
+            sprintf(answer_buffer, "\n\tChargement impossible\n");
+    else sprintf(answer_buffer, "\n\tChargement de l'aquarium effectué (%d view disponible)\n", aq->views_number);
+    fclose(f);
 }
 
-void command__show(char* answer_buffer) {
-    sprintf(answer_buffer, "\nCommande existante non implémentée\n");
+void command__show() {
+    char buffer[CMD_SIZE];
+    int aq = get_aquarium_data(buffer);
+    if (aq == 0) {
+        printf("\n\tAucun aquarium n'a été initialisé\n\tUn aquarium peut être initialisé grace à la commande:\n\t\tload aquarium<n>\n");
+        return;
+    }
+    aquarium *a = get_aquarium();
+    printf("%dx%d\n", a->size.width, a->size.height);
+    for(int i = 0; i < a->views_number; i++){
+        view *v = a->views[i];
+        printf("%s %dx%d+%d+%d\n", v->name, v->size.width, v->size.height, v->position.x, v->position.y);
+    }
 }
 
-void command__add(char* answer_buffer) {
-    sprintf(answer_buffer, "\nCommande existante non implémentée\n");
+void command__add(char** command) {
+    
+    char buffer[CMD_SIZE];
+    int aq = get_aquarium_data(buffer);
+    if (aq == 0) {
+        printf("\n\tAucun aquarium n'a été initialisé\n\tUn aquarium peut être initialisé grace à la commande:\n\t\tload aquarium<n>\n");
+        return;
+    }
+
+    int nb_args = util__count_args(command);
+    if(nb_args == 3 && strcmp(command[1], "view") == 0){
+        char name[3];
+        strcpy(name, command[2]);
+        char* command2[CMD_SIZE];
+        myParser(command2, command[3], "+");
+        size s;
+        s.width = atoi(command2[1]);
+        s.height = atoi(command2[2]);
+        char* command3[CMD_SIZE];
+        myParser(command3, command2[0], "x");
+        position pos;
+        pos.x = atoi(command3[0]);
+        pos.y = atoi(command3[1]);
+        aquarium *a = get_aquarium();
+        int n = addView(name, pos, s, a);
+        if(n)
+            printf("view (name: %s, x: %d, y: %d, width: %d, height: %d) added", name, pos.x, pos.y, s.width, s.height);
+        else
+            printf("\nView can not be added\n");
+    }
+    else
+        printf("\nView can not be added\n");
 }
 
-void command__del(char* answer_buffer) {
-    sprintf(answer_buffer, "\nCommande existante non implémentée\n");
+void command__del(char** command) {
+
+    char buffer[CMD_SIZE];
+    int aq = get_aquarium_data(buffer);
+    if (aq == 0) {
+        printf("\n\tAucun aquarium n'a été initialisé\n\tUn aquarium peut être initialisé grace à la commande:\n\t\tload aquarium<n>\n");
+        return;
+    }
+
+    int nb_args = util__count_args(command);
+    if(nb_args == 2 && strcmp(command[1], "view") == 0){
+        aquarium *a = get_aquarium();
+        int d = delView(command[2], a);
+        if(d)
+            printf("view %s deleted\n", command[2]);
+        else
+            printf("view %s does not exist\n", command[2]);
+
+    }
+    else
+        printf("view can not be deleted\n");
 }
 
-void command__save(char* answer_buffer) {
-    sprintf(answer_buffer, "\nCommande existante non implémentée\n");
+void command__save() {
+
+    char buffer[CMD_SIZE];
+    int aq = get_aquarium_data(buffer);
+    if (aq == 0) {
+        printf("\n\tAucun aquarium n'a été initialisé\n\tUn aquarium peut être initialisé grace à la commande:\n\t\tload aquarium<n>\n");
+        return;
+    }
+
+    FILE *f = fopen(path, "w+");
+    aquarium *a = get_aquarium();
+    char s[40];
+    sprintf(s, "%dx%d\n", a->size.width, a->size.height);
+    fputs(s, f);
+    int i;
+    for(i = 0; i < a->views_number - 1; i++){
+        view *v = a->views[i];
+        sprintf(s, "%s %dx%d+%d+%d\n", v->name, v->size.width, v->size.height, v->position.x, v->position.y);
+        fputs(s, f);
+    }
+
+    if(i > -1){
+        view *v = a->views[i];
+        sprintf(s, "%s %dx%d+%d+%d", v->name, v->size.width, v->size.height, v->position.x, v->position.y);
+        fputs(s, f);
+    }
+    
+    fclose(f);
+
+    printf("aquarium saved! (%d display views)", a->views_number);    
 }
 
 void command__read(char *cmd, char* answer_buffer) {
     char* command[CMD_SIZE];
-    message__parser(command, cmd);
+    util__parser(command, cmd, " ");
     command_type type = command__get_type(command[0]);
-    int nb_args = count_args(command);
+    int nb_args = util__count_args(command);
 
     switch (type) {
         case CLOSE:
@@ -83,23 +186,25 @@ void command__read(char *cmd, char* answer_buffer) {
         break;
 
         case LOAD:
-        command__load(answer_buffer);
+        if (nb_args == 1)
+            command__load(command[1], answer_buffer);
+        else command__bad_args("load aquarium<n>", answer_buffer);
         break;
 
         case SHOW:
-        command__show(answer_buffer);
+        command__show();
         break;
 
         case ADD:
-        command__add(answer_buffer);
+        command__add(command);
         break;
 
         case DEL:
-        command__del(answer_buffer);
+        command__del(command);
         break;
 
         case SAVE:
-        command__save(answer_buffer);
+        command__save();
         break;
 
         default:

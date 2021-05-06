@@ -7,6 +7,7 @@
 #include <time.h>
 
 
+#define waiting_time 5
 #define INPUT_MAX_SIZE 60
 #define COMMAND_MAX_SIZE 20
 #define MAX_NAME_SIZE 30
@@ -52,7 +53,7 @@ typedef struct PathWay
 
 typedef struct fish
 {
-    char name[MAX_NAME_SIZE];
+    char *name;
     size size;
     position position;
     PathWay path;

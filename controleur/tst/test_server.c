@@ -6,16 +6,10 @@
 
 #include "fake_client.h"
 
-int main(int argc, char *argv[]) {
+int main(void) {
 
-    if (argc < 3)
-    {
-        fprintf(stderr, "usage %s hostname port\n", argv[0]);
-        exit(0);
-    }
-
-    struct hostent *server = gethostbyname(argv[1]);
-    int portno = atoi(argv[2]);
+    struct hostent *server = gethostbyname("localhost");
+    int portno = 45321;
 
     launch_fake_client(portno, server);
 
