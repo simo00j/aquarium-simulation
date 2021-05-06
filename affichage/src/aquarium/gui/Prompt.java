@@ -1,7 +1,7 @@
 package aquarium.gui;
 
 import aquarium.Connection;
-import javafx.application.Platform;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -10,61 +10,89 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
 
-public class Prompt implements Runnable {
+public class Prompt {
 
-    Stage stage;
+    public Stage stage;
     Connection connection;
     TextArea response;
-
 
     public Prompt(Connection connection) {
         this.connection = connection;
         this.stage = new Stage();
         stage.setTitle("Client prompt");
-
         VBox box = new VBox(5);
-        
         TextField command = new TextField();
-        command.setPromptText("Enter command here.");
-
+        command.setStyle("-fx-text-box-border: #00ff00; -fx-focus-color: #00ff00; -fx-control-inner-background: #2d2d2d; -fx-font-family: Consolas; -fx-highlight-fill: #00ff00; -fx-highlight-text-fill: #2d2d2d; -fx-text-fill: #00ff00; ");
         this.response = new TextArea();
-        response.setPrefRowCount(10);
-        response.setEditable(false);
-
-
-        Button example = new Button("Run example of commands");
-        example.setOnAction(actionEvent -> {
-            //TODO: Add file for example of commands and actions to run it
-        });
-        box.getChildren().addAll(command, response, example);
-        box.setAlignment(Pos.CENTER);
-
-        response.setStyle("-fx-text-fill: blue; -fx-highlight-fill: null;");
-        command.setStyle("-fx-text-fill: green;");
-
-        command.setOnKeyPressed( event -> {
-            if( event.getCode() == KeyCode.ENTER ) {
-                sendCommand(command.getText());
-                command.setText("");
+        this.response.setPrefRowCount(10);
+        this.response.setEditable(false);
+        this.response.setStyle("-fx-text-box-border: #00ff00; -fx-focus-color: #00ff00; -fx-control-inner-background: #2d2d2d; -fx-font-family: Consolas; -fx-highlight-fill: #00ff00; -fx-highlight-text-fill: #00ff00; -fx-text-fill: #00ff00; ");
+        Button exampleButton = new Button("Run example");
+        exampleButton.setStyle("-fx-background-color: dodgerBlue; -fx-text-fill: white;");
+        exampleButton.setOnAction(actionEvent -> {
+            try {
+                File commandsExample = new File("resources/data/example.cmds");
+                Scanner reader = new Scanner(commandsExample);
+                while (reader.hasNextLine()) {
+                    connection.sendCommand(reader.nextLine());
+                    Thread.sleep(100);
+                }
+                reader.close();
+            } catch (FileNotFoundException e) {
+                System.out.println("file not found.");
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         });
 
+        Button logoutButton = new Button("log out");
+        logoutButton.setStyle("-fx-background-color: red; -fx-text-fill: white;");
+        logoutButton.setOnAction(actionEvent -> {
+            connection.sendCommand("log out");
+        });
+
+        Button statusButton = new Button("status");
+        statusButton.setStyle("-fx-background-color: green; -fx-text-fill: white;");
+        statusButton.setOnAction(actionEvent -> {
+            connection.sendCommand("status");
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+
+        GridPane buttons = new GridPane();
+        buttons.setAlignment(Pos.CENTER);
+        buttons.setHgap(5);
+        buttons.add(exampleButton, 0, 0, 1, 1);
+        buttons.add(statusButton, 1, 0, 1, 1);
+        buttons.add(logoutButton, 2, 0, 1, 1);
+        box.getChildren().addAll(command, this.response, buttons);
+        box.setAlignment(Pos.CENTER);
+        box.setStyle("-fx-background-color : #2d2d2d;");
+        this.response.setScrollTop(0);
+        command.setOnKeyPressed( event -> {
+            if( event.getCode() == KeyCode.ENTER ) {
+                connection.commandsList.addLast(command.getText());
+                connection.sendCommand(command.getText());
+                addCommand(command.getText());
+                command.setText("");
+            }
+        });
         stage.setScene(new Scene(box, 400, 250));
     }
 
-    public void sendCommand(String scanned) {
-        this.connection.commandsList.add(scanned);
-        this.connection.client.out.println(scanned);
-        this.connection.client.out.flush();
-    }
-
     public void addResponse(String str) {
-        this.response.appendText(str);
+        this.response.appendText("< " + str + "\n");
     }
 
-    @Override
-    public void run() {
-        Platform.runLater(() -> this.stage.show());
+    public void addCommand(String str) {
+        this.response.appendText("> " + str + "\n");
     }
 }

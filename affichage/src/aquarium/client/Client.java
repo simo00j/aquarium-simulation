@@ -8,9 +8,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Client {
-    private Socket socket = null;
-    public PrintWriter out = null;
-    public BufferedReader in = null;
+    private Socket socket;
+    public PrintWriter out;
+    public BufferedReader in;
     private static final Logger logger = Logger.getLogger(Client.class.getName());
 
     public Client() {
@@ -20,7 +20,7 @@ public class Client {
             this.out = new PrintWriter(this.socket.getOutputStream(), true);
             this.in = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
         }catch (IOException e){
-            logger.log(Level.INFO, "The server is not running or can't be reached");
+            logger.log(Level.SEVERE, "The server is not running or can't be reached");
             System.exit(0);
         }
     }

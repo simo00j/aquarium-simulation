@@ -6,14 +6,17 @@
 
 int server_connected = 0;
 
-void control_server__connect() {
+void control_server__connect()
+{
     server_connected = 1;
 }
 
-void control_server__disconnect() {
+void control_server__disconnect()
+{
     server_connected = 0;
 }
 
-int control_server__is_connected() {
+int control_server__is_connected()
+{
     return server_connected;
 }

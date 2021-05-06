@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class Connection {
@@ -25,48 +26,36 @@ public class Connection {
     public BufferedReader stdIn;
     public Prompt prompt;
     public LinkedList<String> commandsList;
-    //public static final Logger logger = Logger.getLogger(Connection.class.getName());
+    public final Logger logger = Logger.getLogger(Connection.class.getName());
 
     public Connection(Stage primaryStage) {
         this.commandsList = new LinkedList<>();
         this.client = new Client();
         this.stdIn = new BufferedReader(new InputStreamReader(System.in));
-
-        initializeConnection();
-
+        this.viewer = new Viewer(primaryStage);
         this.prompt = new Prompt(this);
+
+        Thread ServerIncomingThread = new Thread(new ParseServerIncoming(this));
+        ServerIncomingThread.setDaemon(true);
+        ServerIncomingThread.start();
+
         primaryStage.setOnCloseRequest(e -> {
             endConnection();
             Platform.exit();
             System.exit(0);
         });
-        this.viewer = new Viewer(primaryStage, 1280, 720);
     }
 
     public void launch() {
-        Thread thread = new Thread(() -> Platform.runLater(() -> {
-            this.viewer.stage.show();
-            this.addFish(new Fish("Spongebob", 100, 120, new Point(400, 400),  new Point(600, 600), 5));
-            this.startFish();
-            String s2 = "addFish PoissonRouge at 92x40,60x45, RandomWayPoint";
-            Parser.parseAddFish(s2, this);
-            this.fishList.forEach(this::addFish);
-            this.fishList.forEach(Fish::move);
-        }));
-        thread.setDaemon(true);
-        thread.start();
-
         Thread pingThread = new Thread(new Ping(this.client.out));
         pingThread.setDaemon(true);
         pingThread.start();
 
-        Thread promptThread = new Thread(new Prompt(this));
-        promptThread.setDaemon(true);
-        promptThread.start();
-
-        Thread ServerIncomingThread = new Thread(new ParseServerIncoming(this));
-        ServerIncomingThread.setDaemon(true);
-        ServerIncomingThread.start();
+        Platform.runLater(() -> {
+            this.viewer.stage.setTitle(Config.properties.getProperty("id"));
+            this.viewer.stage.show();
+            this.prompt.stage.show();
+        });
     }
 
     public void updateFish(Fish fish) {
@@ -74,11 +63,11 @@ public class Connection {
         oldFish.updateFish(fish);
         Platform.runLater(oldFish::move);
     }
+
     public void addFish(Fish fish) {
-        if (!fishList.stream().map(Fish::getName).collect(Collectors.toList()).contains(fish.getName())) {
-            fishList.add(fish);
-            Platform.runLater(() -> this.viewer.pane.getChildren().add(fish.getImageView()));
-        }
+        System.out.println("Adding fish");
+        fishList.add(fish);
+        Platform.runLater(() -> this.viewer.pane.getChildren().add(fish.getImageView()));
     }
 
     public void startFish(String name){
@@ -94,19 +83,20 @@ public class Connection {
         fish.move();
     }
 
-    public void startFish(){
-        for (Fish f : fishList){
-            f.move();
-        }
-    }
-
     public void delFish(String name){
         for (Fish f : fishList){
             if (f.getName().equals(name)) {
-                fishList.remove(f);
+                this.fishList.remove(f);
+                Platform.runLater(() -> this.viewer.pane.getChildren().remove(f.getImageView()));
                 break;
             }
         }
+    }
+
+    public void sendCommand(String str) {
+        this.client.out.println(str);
+        this.client.out.flush();
+        logger.info("> " + str);
     }
 
     public void endConnection() {
@@ -117,15 +107,13 @@ public class Connection {
         }
     }
 
-    private void initializeConnection() {
+    public void initializeConnection() {
         if (Config.properties.getProperty("id") != null) {
-            this.client.out.println("hello in as " + Config.properties.getProperty("id"));
+            sendCommand("hello in as " + Config.properties.getProperty("id"));
         } else {
-            this.client.out.println("hello");
+            sendCommand("hello");
         }
-        commandsList.add("hello");
-        this.client.out.println("getFishes");
-        commandsList.add("getFishes");
-
+        this.commandsList.addLast("getFishes");
+        sendCommand("getFishes");
     }
 }

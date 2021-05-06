@@ -1,192 +1,187 @@
-#include "aquarium.h"
 #include <string.h>
+#include "aquarium.h"
+#include "debug.h"
 
-aquarium* aq = NULL;
-
-void exitIf(int cond, char *err)
+aquarium *aquarium__empty()
 {
-    if (cond)
-    {
-        fprintf(stderr, "Error : %s\n", err);
-        exit(EXIT_FAILURE);
-    }
-}
-
-void print_aquarium(aquarium* a){
-    if(a != NULL) {
-        printf("Size: %d x %d\n\n", a->size.width, a->size.height);
-        printf("Views:\n");
-        for (int i = 0; i < a->views_number; i++) {
-            printf("\t%s %dx%d+%d+%d\n", a->views[i]->name, a->views[i]->position.x, a->views[i]->position.y, a->views[i]->size.width, a->views[i]->size.height);
-        }
-    }
-}
-
-//TODO
-int get_aquarium_data() {
-    if(aq == NULL) 
-        return 0;
-    return 1;
-}
-
-aquarium* loadDataFromFile(FILE *f)
-{
-    aq = malloc(sizeof(aquarium));
-    aq->views_number = 0;
-    fscanf(f, "%dx%d\n", &(aq->size.width), &(aq->size.height));
-
-    while (!feof(f))
-    {
-        view* fv = malloc(sizeof(fv));
-        fscanf(f, "%s %dx%d+%d+%d", fv->name, &(fv->position.x), &(fv->position.y), &(fv->size.width), &(fv->size.height));
-        aq->views[aq->views_number] = malloc(sizeof(view));
-        aq->views[aq->views_number] = fv;
-        aq->views_number++;
-    }
+    aquarium *aq = malloc(sizeof(aquarium));
+    aq->frame = frame__from_str(AQUARIUM__DEFAULT_FRAME);
+    STAILQ_INIT(&(aq->fish_list));
+    STAILQ_INIT(&(aq->views_list));
     return aq;
 }
 
-aquarium* get_aquarium() {
+struct aquarium *aquarium__load(FILE *f)
+{
+    DEBUG_OUT("entering aquarium__load\n");
+    aquarium *aq = malloc(sizeof(aquarium));
+    char line[256];
+    view *v;
+    aq->frame = malloc(sizeof(frame));
+    STAILQ_INIT(&(aq->fish_list));
+    STAILQ_INIT(&(aq->views_list));
+    fgets(line, sizeof(line), f);
+    sscanf(line, "%dx%d", &(aq->frame->width), &(aq->frame->height));
+
+    while (fgets(line, sizeof(line), f))
+    {
+        v = malloc(sizeof(view));
+        v->frame = malloc(sizeof(frame));
+        v->name = malloc(sizeof(char) * VIEW_NAME_MAX_SIZE);
+        sscanf(line, "%s %dx%d+%d+%d", v->name, &(v->frame->x), &(v->frame->y), &(v->frame->width), &(v->frame->height));
+        STAILQ_INSERT_HEAD(&(aq->views_list), v, next);
+    }
+    DEBUG_OUT("quitting aquarium__load\n");
     return aq;
 }
 
-aquarium* newAquarium(size s){
-    aquarium *a = malloc(sizeof(aquarium*));
-    a->size = s;
-    a->fish = malloc(sizeof(fish**));
-    a->fish_number = 0;
-    //a->views = malloc(sizeof(view**));
-    a->views_number = 0;
+void aquarium__save(aquarium *aq)
+{
+    DEBUG_OUT("entering aquarium__save\n");
+    FILE *f = fopen("aquarium1.txt", "w");
+    fprintf(f, "%dx%d\n", aq->frame->width, aq->frame->height);
 
-    return a;
-}
-
-void delAquarium(aquarium *a){
-    free(a->fish);
-    free(a->views);
-    free(a);
-}
-
-int containsfish(aquarium *a ,char * name ){
-    for (int i=0; i<a->fish_number ;i++){
-        if (a->fish[i]->name==name)
-            return i;
+    view *v;
+    STAILQ_FOREACH(v, &(aq->views_list), next)
+    {
+        fprintf(f, "%s %dx%d+%d+%d\n", v->name, v->frame->x, v->frame->y, v->frame->width, v->frame->height);
     }
-    return -1;
+    fprintf(f, "\n");
+    fclose(f);
+    DEBUG_OUT("quitting aquarium__save\n");
 }
 
-int addFish( char* name, position pos, size s, position(*p)(position), aquarium *a ){
-
-    if (containsfish(a,name) ==-1){
-        //printf("NOK");
-        return 0;
-    }else{
-        fish *f = newFish(name,pos,s,p);
-        a->fish[a->fish_number] = f;
-        a->fish_number++;
-        //printf("OK");
-        return 1;
-    }
-}
-
-
-int containsView(aquarium* a, char name[]){
-    
-    for (int i=0; i < a->views_number ;i++){
-        if (strcmp(a->views[i]->name, name) == 0)
-            return i;
-    }
-    return -1;
-}
-
-view* newView(char name[], position pos, size s){
-    view *v = malloc(sizeof(view*));
-    strcpy(v->name, name);
-    v->position = pos;
-    v->size = s;
-
-    return v;
-}
-
-int addView(char name[], position pos, size s, aquarium* a){
- 
-    if(containsView(a, name) == -1 && a->views_number < MAX_VIEWS){
-        view *v = newView(name, pos, s);
-        a->views[a->views_number] = v;
-        a->views_number++;
-        return 1;
-    }
-
-    return 0;
-}
-
-int delView(char name[], aquarium *a){
-    
-    int n = containsView(a, name);
-    if( n != -1){
-        for(int i = n; i < a->views_number - 1; i++)
-            a->views[i] = a->views[i+1];
-        a->views_number--;
-        return 1;
-    }
-
-    return 0;
-}
-
-void update_aquarium(aquarium* a){
-    for (int i = 0; i < a->fish_number; i++)
-        a->fish[i]->position = a->fish[i]->path_function(a->fish[i]->position);
-}
-
-void getFishes(aquarium *a){
-
-    printf("list ");
-    for (int i = 0; i < a->fish_number; i++){
-        fish *f = a->fish[i];
-        printf("[ %s at %dx%d, %dx%d,%d]",f->name,f->position.x,f->position.y,f->size.width,f->size.height,waiting_time);
-    }
-    
-}
-
-void getFishesContinuously(aquarium *a){
-
-    while(1){
-        getFishes(a);
-        update_aquarium(a);
-    }
-}
-
-void ls(aquarium *a){
-    while(1){
-        getFishes(a);
-        update_aquarium(a);
-        //sleep(waiting_time);
-    }
-}
-
-void delFish(char* name, aquarium *a){
-    int indice = containsfish(a,name);
-    if (indice!=-1){
-        free(a->fish[indice]);
-        for (int i = indice; i < a->fish_number-1; i++)
+int aquarium__add_fish(aquarium *aq, fish *f)
+{
+    DEBUG_OUT("entering aquarium__add_fish\n");
+    fish *fish;
+    STAILQ_FOREACH(fish, &(aq->fish_list), next)
+    {
+        DEBUG_OUT("aquarium__add_fish : comparing fish names\n");
+        if (strcmp(fish->name, f->name) == 0)
         {
-            a->fish[i]=a->fish[i+1];
+
+            DEBUG_OUT("quitting aquarium__add_fish without adding %s\n", f->name);
+            return -1;
         }
-        a->fish_number--;
-        printf("OK");
-    }else{
-        printf("NOK");
     }
-    return;
+    DEBUG_OUT("aquarium__add_fish : adding fish\n");
+    STAILQ_INSERT_HEAD(&(aq->fish_list), f, next);
+    DEBUG_OUT("quitting aquarium__add_fish after adding %s\n", f->name);
+    return 0;
 }
 
-/*void startFish(char* name, aquarium *a){   
-    printf("OK");
-}
-*/
-/*int main()
+int aquarium__del_fish(aquarium *aq, char *name)
 {
-    aquarium *aq = getDataFromFile("aquarium1.txt");
-    (void)aq;
+    fish *f;
+    STAILQ_FOREACH(f, &(aq->fish_list), next)
+    {
+        if (strcmp(f->name, name) == 0)
+        {
+            STAILQ_REMOVE(&(aq->fish_list), f, fish, next);
+            return 0;
+        }
+    }
+    return -1;
+}
+
+int aquarium__add_view(aquarium *aq, view *v)
+{
+    view *view;
+    STAILQ_FOREACH(view, &(aq->views_list), next)
+    {
+        if (!strcmp(view->name, v->name))
+        {
+            return -1;
+        }
+    }
+    STAILQ_INSERT_HEAD(&(aq->views_list), view, next);
     return 0;
-}*/
+}
+
+int aquarium__del_view(aquarium *aq, char *name)
+{
+    view *v;
+    STAILQ_FOREACH(v, &(aq->views_list), next)
+    {
+        if (strcmp(v->name, name))
+        {
+            STAILQ_REMOVE(&(aq->views_list), v, view, next);
+            return 0;
+        }
+    }
+    return -1;
+}
+
+view *aquarium__get_free_view(aquarium *aq)
+{
+    view *v;
+    STAILQ_FOREACH(v, &(aq->views_list), next)
+    {
+        if (!v->taken)
+        {
+            return v;
+        }
+    }
+    return NULL;
+}
+
+view *aquarium__get_view(aquarium *aq, char *name)
+{
+    view *v;
+    STAILQ_FOREACH(v, &(aq->views_list), next)
+    {
+        if (!strcmp(v->name, name))
+        {
+            return v;
+        }
+    }
+    return NULL;
+}
+
+fish *aquarium__get_fish(aquarium *aq, char *name)
+{
+    fish *f;
+    STAILQ_FOREACH(f, &(aq->fish_list), next)
+    {
+        if (!strcmp(f->name, name))
+        {
+            return f;
+        }
+    }
+    return NULL;
+}
+
+int aquarium_count_fish_in_view(aquarium *aq, view *v)
+{
+    fish *f;
+    int i = 0;
+    STAILQ_FOREACH(f, &(aq->fish_list), next)
+    {
+        if (frame__includes_snippet(v->frame, f->frame))
+        {
+            i++;
+        }
+    }
+    return i;
+}
+
+void aquarium__free(aquarium *aquarium)
+{
+    view *v;
+    fish *f;
+    while (!STAILQ_EMPTY(&(aquarium->views_list)))
+    {
+        v = STAILQ_FIRST(&(aquarium->views_list));
+        STAILQ_REMOVE_HEAD(&(aquarium->views_list), next);
+        view__free(v);
+    }
+    while (!STAILQ_EMPTY(&(aquarium->fish_list)))
+    {
+        f = STAILQ_FIRST(&(aquarium->fish_list));
+        STAILQ_REMOVE_HEAD(&(aquarium->fish_list), next);
+        fish__free(f);
+    }
+    free(aquarium->frame);
+    free(aquarium);
+}

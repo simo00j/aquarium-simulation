@@ -9,97 +9,46 @@
 #include <pthread.h>
 #include <signal.h>
 #include <sys/time.h>
-
-
 #include "launch_server.h"
-#include "message.h"
 #include "command.h"
+#include "aquarium.h"
 #include "control_client.h"
 #include "control_server.h"
-#include "util.h"
+#include "utils.h"
 
-#define MAX_CLIENTS 50
-#define BUFFER_SIZE 256
+#define ANSI_COLOR_GREEN "\x1b[32m"
+#define ANSI_COLOR_RESET "\x1b[0m"
 
+aquarium *aq;
 
-typedef struct thread_args_t {
-    char* buffer;
-    int sockfd;
-    int timeout;
-} thread_args_t;
+void *server_interface(void *args)
+{
 
-void* talk(void* args) {
-    thread_args_t *arg = (thread_args_t*) args;
-    char* buffer = arg->buffer;
-    int sockfd = arg->sockfd;
-    int timeout = arg->timeout;
-    int n, len_answer;
-    char answer_buffer[BUFFER_SIZE];
+    char buffer[BUFFER_MAX_SIZE];
+    char answer_buffer[BUFFER_MAX_SIZE];
+    (void)args;
 
-    fd_set readfds;
-    struct timeval time_out;
-    FD_ZERO(&readfds);
-    FD_SET(sockfd,&readfds);
-    time_out.tv_sec = 5;    // 10 seconds
-    time_out.tv_usec = 0;    // 0 milliseconds
+    while (control_server__is_connected())
+    {
+        printf("$ ");
+        bzero(buffer, BUFFER_MAX_SIZE);
+        bzero(answer_buffer, BUFFER_MAX_SIZE);
+        fgets(buffer, BUFFER_MAX_SIZE - 1, stdin);
 
-    while (control_client__is_connected(sockfd) && control_server__is_connected()) { 
-        time_out.tv_sec = timeout;    // 100 seconds 
-        time_out.tv_usec = 0;
-        int a = select(FD_SETSIZE,&readfds,NULL,NULL,&time_out);
-        //if (a == -1) error("Error select");
-        if (a == 0) {
-            control_client__disconnect(sockfd);
-            break;
-        }
+        command__from_server(buffer, answer_buffer);
 
-        bzero(buffer, BUFFER_SIZE);
-        bzero(answer_buffer, BUFFER_SIZE);
-
-        n = read(sockfd, buffer, BUFFER_SIZE - 1);
-        if (n < 0)
-            error("ERROR reading from socket");
-
-        message__read(buffer, sockfd, answer_buffer);
-        len_answer = strlen(answer_buffer);
-        
-        signal(SIGPIPE, SIG_IGN); // voir avec sigaction
-        n = write(sockfd, answer_buffer, len_answer);
-        if (n < 0) {
-            return (void*) 0;
-        }
+        printf("%s\n" ANSI_COLOR_RESET, answer_buffer);
     }
-    //close(sockfd);
-
-    return (void*) 0;
+    return (void *)0;
 }
 
-void* server_interface(void* args) {
-    
-    char buffer[BUFFER_SIZE];
-    char answer_buffer[BUFFER_SIZE];
-    (void) args;
-    
-    while(control_server__is_connected()){
-        printf("Commande: ");
-        bzero(buffer, BUFFER_SIZE);
-        bzero(answer_buffer, BUFFER_SIZE);
-        fgets(buffer, BUFFER_SIZE - 1, stdin);
-        
-        command__read(buffer, answer_buffer);
-
-        printf("%s\n", answer_buffer);
-    }
-    return (void*) 0;
-}
-
-int launch_server(int portno, int timeout) 
+int launch_server(int portno, int timeout)
 {
     int sockfd, newsockfd, clilen;
-    char buffer[BUFFER_SIZE];
+    char buffer[BUFFER_MAX_SIZE];
     struct sockaddr_in serv_addr, cli_addr;
-    thread_args_t* thread_args;
-    pthread_t thread[MAX_CLIENTS];
+    connection *conn;
+    pthread_t thread[CONNECTIONS_MAX_NUMBER];
     pthread_t thread_server;
     int nb_client = 0;
     /*    
@@ -112,19 +61,24 @@ int launch_server(int portno, int timeout)
     time_out.tv_sec = 10;    // 10 seconds
     time_out.tv_usec = 0;    // 0 milliseconds
     */
+    FILE *f = fopen("data/aquarium1.txt", "r");
+    aq = aquarium__load(f);
+    fclose(f);
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0)
         error("ERROR opening socket");
+    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0)
+        error("setsockopt(SO_REUSEADDR) failed");
 
     bzero((char *)&serv_addr, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port = htons(portno);
-    
+
     if (bind(sockfd, (struct sockaddr *)&serv_addr,
              sizeof(serv_addr)) < 0)
         error("ERROR on binding");
-    
+
     listen(sockfd, 5);
     clilen = sizeof(cli_addr);
 
@@ -132,7 +86,8 @@ int launch_server(int portno, int timeout)
     pthread_create(&thread_server, NULL, server_interface, NULL);
     //FD_SET(sockfd,&readfds);
     //int i = 0;
-    while(control_server__is_connected()) {
+    while (control_server__is_connected())
+    {
         /*
         int a = select(FD_SETSIZE,&readfds,NULL,NULL,&time_out);
         //if (a == -1) error("Error select");
@@ -149,33 +104,34 @@ int launch_server(int portno, int timeout)
         }
        */
         newsockfd = accept(sockfd,
-                        (struct sockaddr *)&cli_addr,
-                        (socklen_t *)&clilen);
+                           (struct sockaddr *)&cli_addr,
+                           (socklen_t *)&clilen);
 
-        if (newsockfd < 0) 
+        if (newsockfd < 0)
             error("ERROR on accept");
 
         control_client__connect(newsockfd);
-        
-        thread_args = malloc(sizeof(thread_args_t));
-        thread_args->buffer = buffer;
-        thread_args->sockfd = newsockfd;
-        thread_args->timeout = timeout;
 
-        pthread_create(&thread[nb_client], NULL, talk, thread_args);
+        conn = malloc(sizeof(connection));
+        conn->command_buffer = buffer;
+        conn->socket_fd = newsockfd;
+        conn->timeout = timeout;
+
+        pthread_create(&thread[nb_client], NULL, connection__start, conn);
         nb_client++;
     }
 
     pthread_join(thread_server, NULL);
-    if(nb_client > 0) {
+    if (nb_client > 0)
+    {
         printf("\tFermeture des clients\n\n");
     }
-    for (int i = 0; i < nb_client; i++) {
+    for (int i = 0; i < nb_client; i++)
+    {
         pthread_join(thread[i], NULL);
-        printf("\t\tClients fermés: %d/%d\n", i+1, nb_client);
+        printf("\t\tClients fermés: %d/%d\n", i + 1, nb_client);
     }
     printf("\n\tDéconnexion terminée avec succès\n\n");
 
     return 0;
-
 }

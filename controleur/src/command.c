@@ -1,224 +1,170 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <pthread.h>
+#include <unistd.h>
 #include "command.h"
-#include "util.h"
-#include "control_server.h"
-#include "aquarium.h"
+#include "utils.h"
+#include "config.h"
+#include "debug.h"
 
-#define CMD_SIZE 128
-#define AQUA_DATA_PATH "data/"
-static char path[64];
+extern aquarium *aq;
 
+void command__from_client(char *command_buffer, char *answer_buffer, connection *c, aquarium *aq)
+{
+	char *tmp_buffer = malloc(sizeof(BUFFER_MAX_SIZE));
+	strcpy(tmp_buffer, command_buffer);
+	char *parsed_command[COMMAND__MAX_SIZE];
+	util__parser(parsed_command, command_buffer, " ");
+	int tokens_len = util__count_tokens(parsed_command);
 
-typedef enum command_type{
-    CLOSE,
-    LOAD,
-    SHOW,
-    ADD,
-    DEL,
-    SAVE,
-    DEFAULT,
-} command_type;
-
-
-command_type command__get_type(char *cmd) {   
-    if (!strcmp(cmd, "close")) 
-        return CLOSE;
-    if (!strcmp(cmd, "load")) 
-        return LOAD;
-    if (!strcmp(cmd, "show")) 
-        return SHOW;
-    if (!strcmp(cmd, "add")) 
-        return ADD;
-    if (!strcmp(cmd, "del")) 
-        return DEL;
-    if (!strcmp(cmd, "save")) 
-        return SAVE;
-    else return DEFAULT; 
+	if (tokens_len == 2 && !strcmp(parsed_command[0], "ping"))
+	{
+		if (atoi(parsed_command[1]) == config__get_port())
+		{
+			sprintf(answer_buffer, "pong %d\n", config__get_port());
+		}
+		else
+		{
+			sprintf(answer_buffer, "NOK\n");
+		}
+	}
+	else if (tokens_len == 1 && !strcmp(parsed_command[0], "getFishes"))
+	{
+		sprintf(answer_buffer, "list [PoissonRouge at 90x4,10x4,0] [PoissonClown at 20x80,12x6,0]\n");
+	}
+	else if (tokens_len == 1 && !strcmp(parsed_command[0], "hello"))
+	{
+		c->associated_view = aquarium__get_free_view(aq);
+		if (c->associated_view)
+		{
+			sprintf(answer_buffer, "greeting %s\n", c->associated_view->name);
+		}
+		else
+		{
+			sprintf(answer_buffer, "no greeting\n");
+		}
+	}
+	else if (tokens_len == 4 && !strcmp(parsed_command[0], "hello") && !strcmp(parsed_command[1], "in") && !strcmp(parsed_command[2], "as"))
+	{
+		c->associated_view = aquarium__get_view(aq, parsed_command[3]);
+		if (c->associated_view)
+		{
+			sprintf(answer_buffer, "greeting %s\n", c->associated_view->name);
+		}
+		else
+		{
+			c->associated_view = aquarium__get_free_view(aq);
+			if (c->associated_view)
+			{
+				sprintf(answer_buffer, "greeting %s\n", c->associated_view->name);
+			}
+			else
+			{
+				sprintf(answer_buffer, "no greeting\n");
+			}
+		}
+	}
+	else if (tokens_len == 1 && !strcmp(parsed_command[0], "status"))
+	{
+		fish *f;
+		sprintf(answer_buffer, "\t->OK : Connecté au contrôleur, %d poissons trouvés\n", aquarium_count_fish_in_view(aq, c->associated_view));
+		STAILQ_FOREACH(f, &(aq->fish_list), next)
+		{
+			if (frame__includes_snippet(c->associated_view->frame, f->frame))
+			{
+				sprintf(answer_buffer, "%s\tFish %s at %dx%d,%dx%d %s\n", answer_buffer, f->name, f->frame->x, f->frame->y, f->frame->width, f->frame->height, f->is_started ? "started" : "notStarted");
+			}
+		}
+	}
+	else if (tokens_len == 1 && !strcmp(parsed_command[0], "ls"))
+	{
+		pthread_t t;
+		pthread_create(&t, NULL, connection__ls, (void *)c);
+	}
+	else if (tokens_len == 6 && !strcmp(parsed_command[0], "addFish"))
+	{
+		frame *frame = malloc(sizeof(frame));
+		char name[FISH_NAME_MAX_SIZE];
+		sscanf(tmp_buffer, "addFish %s at %dx%d, %dx%d, RandomWayPoint", name, &(frame->x), &(frame->y), &(frame->width), &(frame->height));
+		fish *f = fish__create(name, frame);
+		f->frame->x = c->associated_view->frame->x * (1 + f->frame->x) / 100;
+		f->frame->y = c->associated_view->frame->y * (1 + f->frame->y) / 100;
+		int err = aquarium__add_fish(aq, f);
+		if (err == -1)
+		{
+			sprintf(answer_buffer, "NOK\n");
+		}
+		else
+		{
+			sprintf(answer_buffer, "OK\n");
+		}
+	}
+	else if (tokens_len == 2 && !strcmp(parsed_command[0], "delFish"))
+	{
+		int err = aquarium__del_fish(aq, parsed_command[1]);
+		if (err == -1)
+		{
+			sprintf(answer_buffer, "NOK\n");
+		}
+		else
+		{
+			sprintf(answer_buffer, "OK\n");
+		}
+	}
+	else if (tokens_len == 2 && !strcmp(parsed_command[0], "startFish"))
+	{
+		fish *f = aquarium__get_fish(aq, parsed_command[1]);
+		if (f)
+		{
+			f->is_started = 1;
+			sprintf(answer_buffer, "OK\n");
+		}
+		else
+		{
+			sprintf(answer_buffer, "NOK\n");
+		}
+	}
+	else if (tokens_len == 2 && !strcmp(parsed_command[0], "log") && !strcmp(parsed_command[1], "out"))
+	{
+		c->status = DISCONNECTED;
+		close(c->socket_fd);
+	}
+	else
+	{
+		sprintf(answer_buffer, "NOK\n");
+	}
 }
 
-void command__bad_args(char* cmd, char* answer_buffer) {
-    sprintf(answer_buffer, "\n\tArguments non conformes\n\tUsage: \n\t\t> %s\n", cmd);
+void *connection__ls(void *conn)
+{
+	connection *c = (connection *)conn;
+	char answer_buffer[BUFFER_MAX_SIZE];
+	while (c->status == CONNECTED)
+	{
+		fish *f;
+		sprintf(answer_buffer, "list");
+		STAILQ_FOREACH(f, &(aq->fish_list), next)
+		{
+			if (f->is_started && frame__includes_snippet(c->associated_view->frame, f->frame))
+			{
+				sprintf(answer_buffer, "%s [%s at %dx%d,%dx%d,%d]", answer_buffer, f->name, f->frame->x, f->frame->y, f->frame->width, f->frame->height, 5);
+			}
+		}
+		sprintf(answer_buffer, "%s\n", answer_buffer);
+		write(c->socket_fd, answer_buffer, strlen(answer_buffer));
+		sleep(1);
+	}
+	pthread_exit(NULL);
 }
 
-void command__default(char* answer_buffer) {
-    sprintf(answer_buffer, "\n\tCommande introuvable \n\tDisponibles: \n\t\t> close \n\t\t> load \n\t\t> show \n\t\t> add \n\t\t> del \n\t\t> save\n");
+void command__from_server(char *command_buffer, char *answer_buffer)
+{
+	char *parsed_command[COMMAND__MAX_SIZE];
+	util__parser(parsed_command, command_buffer, " ");
+	int tokens_len = util__count_tokens(parsed_command);
+
+	//TODO: implemets the commands related to the controller. This must not be very complicated
+	(void)tokens_len;
+	(void)answer_buffer;
 }
-
-void command__close_server(char* answer_buffer) {
-    control_server__disconnect();
-    sprintf(answer_buffer, "\n\tDéconnexion du serveur\n");
-}
-
-void command__load(char* aquarium, char* answer_buffer) {
-    struct aquarium *aq;
-    sprintf(path, "%s%s.txt", AQUA_DATA_PATH, aquarium);
-    FILE *f = fopen(path, "r");
-    if (!f) {
-        sprintf(answer_buffer, "\n\tAquarium %s introuvable \n\tL'aquarium doit être enregistré dans le dossier data/ sous la forme: %s.txt\n", aquarium, aquarium);
-        return; 
-    }
-    aq = loadDataFromFile(f);
-    if(aq == NULL) 
-            sprintf(answer_buffer, "\n\tChargement impossible\n");
-    else sprintf(answer_buffer, "\n\tChargement de l'aquarium effectué (%d view disponible)\n", aq->views_number);
-    fclose(f);
-}
-
-void command__show() {
-    char buffer[CMD_SIZE];
-    int aq = get_aquarium_data(buffer);
-    if (aq == 0) {
-        printf("\n\tAucun aquarium n'a été initialisé\n\tUn aquarium peut être initialisé grace à la commande:\n\t\tload aquarium<n>\n");
-        return;
-    }
-    aquarium *a = get_aquarium();
-    printf("%dx%d\n", a->size.width, a->size.height);
-    for(int i = 0; i < a->views_number; i++){
-        view *v = a->views[i];
-        printf("%s %dx%d+%d+%d\n", v->name, v->size.width, v->size.height, v->position.x, v->position.y);
-    }
-}
-
-void command__add(char** command) {
-    
-    char buffer[CMD_SIZE];
-    int aq = get_aquarium_data(buffer);
-    if (aq == 0) {
-        printf("\n\tAucun aquarium n'a été initialisé\n\tUn aquarium peut être initialisé grace à la commande:\n\t\tload aquarium<n>\n");
-        return;
-    }
-
-    int nb_args = util__count_args(command);
-    if(nb_args == 3 && strcmp(command[1], "view") == 0){
-        char name[3];
-        strcpy(name, command[2]);
-        char* command2[CMD_SIZE];
-        myParser(command2, command[3], "+");
-        size s;
-        s.width = atoi(command2[1]);
-        s.height = atoi(command2[2]);
-        char* command3[CMD_SIZE];
-        myParser(command3, command2[0], "x");
-        position pos;
-        pos.x = atoi(command3[0]);
-        pos.y = atoi(command3[1]);
-        aquarium *a = get_aquarium();
-        int n = addView(name, pos, s, a);
-        if(n)
-            printf("view (name: %s, x: %d, y: %d, width: %d, height: %d) added", name, pos.x, pos.y, s.width, s.height);
-        else
-            printf("\nView can not be added\n");
-    }
-    else
-        printf("\nView can not be added\n");
-}
-
-void command__del(char** command) {
-
-    char buffer[CMD_SIZE];
-    int aq = get_aquarium_data(buffer);
-    if (aq == 0) {
-        printf("\n\tAucun aquarium n'a été initialisé\n\tUn aquarium peut être initialisé grace à la commande:\n\t\tload aquarium<n>\n");
-        return;
-    }
-
-    int nb_args = util__count_args(command);
-    if(nb_args == 2 && strcmp(command[1], "view") == 0){
-        aquarium *a = get_aquarium();
-        int d = delView(command[2], a);
-        if(d)
-            printf("view %s deleted\n", command[2]);
-        else
-            printf("view %s does not exist\n", command[2]);
-
-    }
-    else
-        printf("view can not be deleted\n");
-}
-
-void command__save() {
-
-    char buffer[CMD_SIZE];
-    int aq = get_aquarium_data(buffer);
-    if (aq == 0) {
-        printf("\n\tAucun aquarium n'a été initialisé\n\tUn aquarium peut être initialisé grace à la commande:\n\t\tload aquarium<n>\n");
-        return;
-    }
-
-    FILE *f = fopen(path, "w+");
-    aquarium *a = get_aquarium();
-    char s[40];
-    sprintf(s, "%dx%d\n", a->size.width, a->size.height);
-    fputs(s, f);
-    int i;
-    for(i = 0; i < a->views_number - 1; i++){
-        view *v = a->views[i];
-        sprintf(s, "%s %dx%d+%d+%d\n", v->name, v->size.width, v->size.height, v->position.x, v->position.y);
-        fputs(s, f);
-    }
-
-    if(i > -1){
-        view *v = a->views[i];
-        sprintf(s, "%s %dx%d+%d+%d", v->name, v->size.width, v->size.height, v->position.x, v->position.y);
-        fputs(s, f);
-    }
-    
-    fclose(f);
-
-    printf("aquarium saved! (%d display views)", a->views_number);    
-}
-
-void command__read(char *cmd, char* answer_buffer) {
-    char* command[CMD_SIZE];
-    util__parser(command, cmd, " ");
-    command_type type = command__get_type(command[0]);
-    int nb_args = util__count_args(command);
-
-    switch (type) {
-        case CLOSE:
-        if (nb_args == 1 
-        && !strcmp(command[1], "server"))
-            command__close_server(answer_buffer);
-        else command__bad_args("close server", answer_buffer);
-        break;
-
-        case LOAD:
-        if (nb_args == 1)
-            command__load(command[1], answer_buffer);
-        else command__bad_args("load aquarium<n>", answer_buffer);
-        break;
-
-        case SHOW:
-        command__show();
-        break;
-
-        case ADD:
-        command__add(command);
-        break;
-
-        case DEL:
-        command__del(command);
-        break;
-
-        case SAVE:
-        command__save();
-        break;
-
-        default:
-        command__default(answer_buffer);
-        break;
-    }
-}
-
-
-/*
-int main(){
-    char str[] ="close server\n";
-    char buf[256];
-    command__read(str, buf);
-    printf("Returned: %s", buf);
-}
-*/
