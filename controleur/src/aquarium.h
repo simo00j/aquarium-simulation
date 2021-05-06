@@ -29,7 +29,7 @@ int aquarium__del_view(aquarium *aq, char *name);
 view *aquarium__get_free_view(aquarium *aq);
 view *aquarium__get_view(aquarium *aq, char *name);
 fish *aquarium__get_fish(aquarium *aq, char *name);
-int aquarium_count_fish_in_view(aquarium *aq, view *v);
+int aquarium__count_fish_in_view(aquarium *aq, view *v);
 void aquarium__free(aquarium *aq);
 
 #endif //__AQUARIUM__H__

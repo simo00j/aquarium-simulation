@@ -31,6 +31,7 @@ void command__from_client(char *command_buffer, char *answer_buffer, connection 
 	}
 	else if (tokens_len == 1 && !strcmp(parsed_command[0], "getFishes"))
 	{
+		//TODO: implemet the reponse to this request
 		sprintf(answer_buffer, "list [PoissonRouge at 90x4,10x4,0] [PoissonClown at 20x80,12x6,0]\n");
 	}
 	else if (tokens_len == 1 && !strcmp(parsed_command[0], "hello"))
@@ -68,7 +69,7 @@ void command__from_client(char *command_buffer, char *answer_buffer, connection 
 	else if (tokens_len == 1 && !strcmp(parsed_command[0], "status"))
 	{
 		fish *f;
-		sprintf(answer_buffer, "\t->OK : Connecté au contrôleur, %d poissons trouvés\n", aquarium_count_fish_in_view(aq, c->associated_view));
+		sprintf(answer_buffer, "\t->OK : Connecté au contrôleur, %d poissons trouvés\n", aquarium__count_fish_in_view(aq, c->associated_view));
 		STAILQ_FOREACH(f, &(aq->fish_list), next)
 		{
 			if (frame__includes_snippet(c->associated_view->frame, f->frame))

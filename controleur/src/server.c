@@ -5,7 +5,8 @@
 #include "launch_server.h"
 #include "config.h"
 
-int main(void){
+int main(void)
+{
 
     int portno = config__get_port();
     int timeout = config__get_timeout();

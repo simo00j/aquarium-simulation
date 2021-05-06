@@ -152,7 +152,7 @@ fish *aquarium__get_fish(aquarium *aq, char *name)
     return NULL;
 }
 
-int aquarium_count_fish_in_view(aquarium *aq, view *v)
+int aquarium__count_fish_in_view(aquarium *aq, view *v)
 {
     fish *f;
     int i = 0;
