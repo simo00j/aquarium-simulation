@@ -1,5 +1,5 @@
-#ifndef __POSITION__H__
-#define __POSITION__H__
+#ifndef FRAME_H
+#define FRAME_H
 
 typedef struct frame
 {
@@ -14,4 +14,4 @@ frame *frame__from_str(const char *string);
 char *frame__to_str(frame *frame);
 int frame__includes_snippet(const struct frame *position, const struct frame *snippet);
 
-#endif //__POSITION__H__
+#endif //FRAME_H

@@ -118,7 +118,7 @@ view *aquarium__get_free_view(aquarium *aq)
     view *v;
     STAILQ_FOREACH(v, &(aq->views_list), next)
     {
-        if (!v->taken)
+        if (v->taken == 0)
         {
             return v;
         }
@@ -131,7 +131,7 @@ view *aquarium__get_view(aquarium *aq, char *name)
     view *v;
     STAILQ_FOREACH(v, &(aq->views_list), next)
     {
-        if (!strcmp(v->name, name))
+        if (strcmp(v->name, name) == 0)
         {
             return v;
         }

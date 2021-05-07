@@ -9,10 +9,10 @@ BIN = server
 .PHONY: all
 all: $(BIN)
 
-server: launch_server.o server.o frame.o connection.o view.o control_client.o control_server.o command.o config.o utils.o fish.o aquarium.o
-	gcc -o server ${BUILD_PATH}launch_server.o ${BUILD_PATH}server.o ${BUILD_PATH}connection.o ${BUILD_PATH}command.o ${BUILD_PATH}view.o ${BUILD_PATH}frame.o ${BUILD_PATH}control_client.o ${BUILD_PATH}control_server.o ${BUILD_PATH}config.o ${BUILD_PATH}utils.o ${BUILD_PATH}fish.o ${BUILD_PATH}aquarium.o ${THREAD_FLAGS}
+server: server.o frame.o connection.o view.o command.o config.o utils.o fish.o aquarium.o
+	gcc -o server ${BUILD_PATH}server.o ${BUILD_PATH}connection.o ${BUILD_PATH}command.o ${BUILD_PATH}view.o ${BUILD_PATH}frame.o ${BUILD_PATH}config.o ${BUILD_PATH}utils.o ${BUILD_PATH}fish.o ${BUILD_PATH}aquarium.o ${THREAD_FLAGS}
 
-%.o: ${SRC_PATH}%.c build
+%.o: ${SRC_PATH}%.c ${SRC_PATH}%.h build
 	gcc -o ${BUILD_PATH}$@ -c $< ${CFLAGS}
 
 build:

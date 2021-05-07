@@ -1,5 +1,5 @@
-#ifndef __VIEW__H__
-#define __VIEW__H__
+#ifndef VIEW_H
+#define VIEW_H
 
 #include <sys/queue.h>
 #include "frame.h"
@@ -18,4 +18,4 @@ typedef struct view
 view *view__create(char *name, frame *frame);
 void view__free(view *view);
 
-#endif //__VIEW__H__
+#endif //VIEW_H

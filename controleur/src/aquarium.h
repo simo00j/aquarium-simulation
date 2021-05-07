@@ -1,5 +1,5 @@
-#ifndef __AQUARIUM__H__
-#define __AQUARIUM__H__
+#ifndef AQUARIUM_H
+#define AQUARIUM_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,4 +32,4 @@ fish *aquarium__get_fish(aquarium *aq, char *name);
 int aquarium__count_fish_in_view(aquarium *aq, view *v);
 void aquarium__free(aquarium *aq);
 
-#endif //__AQUARIUM__H__
+#endif //AQUARIUM_H

@@ -6,11 +6,8 @@ import aquarium.gui.Fish;
 import aquarium.gui.Prompt;
 import aquarium.gui.Viewer;
 import aquarium.parse.ParseServerIncoming;
-import aquarium.parse.Parser;
 import javafx.application.Platform;
 import javafx.stage.Stage;
-
-import java.awt.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -49,7 +46,7 @@ public class Connection {
     public void launch() {
         Thread pingThread = new Thread(new Ping(this.client.out));
         pingThread.setDaemon(true);
-        pingThread.start();
+        //pingThread.start();
 
         Platform.runLater(() -> {
             this.viewer.stage.setTitle(Config.properties.getProperty("id"));
@@ -65,7 +62,6 @@ public class Connection {
     }
 
     public void addFish(Fish fish) {
-        System.out.println("Adding fish");
         fishList.add(fish);
         Platform.runLater(() -> this.viewer.pane.getChildren().add(fish.getImageView()));
     }

@@ -1,7 +1,7 @@
-#ifndef __CONFIG__H__
-#define __CONFIG__H__
+#ifndef CONFIG_H
+#define CONFIG_H
 
 int config__get_port();
 int config__get_timeout();
 
-#endif //__CONFIG__H__
+#endif //CONFIG_H

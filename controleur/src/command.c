@@ -6,75 +6,78 @@
 #include "command.h"
 #include "utils.h"
 #include "config.h"
-#include "debug.h"
+#include "server.h"
 
-extern aquarium *aq;
+extern server *controller;
 
-void command__from_client(char *command_buffer, char *answer_buffer, connection *c, aquarium *aq)
+void command__from_client(connection *c, aquarium *aq)
 {
 	char *tmp_buffer = malloc(sizeof(BUFFER_MAX_SIZE));
-	strcpy(tmp_buffer, command_buffer);
+	strcpy(tmp_buffer, c->command_buffer);
 	char *parsed_command[COMMAND__MAX_SIZE];
-	util__parser(parsed_command, command_buffer, " ");
+	util__parser(parsed_command, c->command_buffer, " ");
 	int tokens_len = util__count_tokens(parsed_command);
 
 	if (tokens_len == 2 && !strcmp(parsed_command[0], "ping"))
 	{
 		if (atoi(parsed_command[1]) == config__get_port())
 		{
-			sprintf(answer_buffer, "pong %d\n", config__get_port());
+			sprintf(c->answer_buffer, "pong %d\n", config__get_port());
 		}
 		else
 		{
-			sprintf(answer_buffer, "NOK\n");
+			sprintf(c->answer_buffer, "NOK\n");
 		}
 	}
 	else if (tokens_len == 1 && !strcmp(parsed_command[0], "getFishes"))
 	{
 		//TODO: implemet the reponse to this request
-		sprintf(answer_buffer, "list [PoissonRouge at 90x4,10x4,0] [PoissonClown at 20x80,12x6,0]\n");
+		sprintf(c->answer_buffer, "list [PoissonRouge at 90x4,10x4,0] [PoissonClown at 20x80,12x6,0]\n");
 	}
 	else if (tokens_len == 1 && !strcmp(parsed_command[0], "hello"))
 	{
 		c->associated_view = aquarium__get_free_view(aq);
 		if (c->associated_view)
 		{
-			sprintf(answer_buffer, "greeting %s\n", c->associated_view->name);
+            c->associated_view->taken = 1;
+			sprintf(c->answer_buffer, "greeting %s\n", c->associated_view->name);
 		}
 		else
 		{
-			sprintf(answer_buffer, "no greeting\n");
+			sprintf(c->answer_buffer, "no greeting\n");
 		}
 	}
 	else if (tokens_len == 4 && !strcmp(parsed_command[0], "hello") && !strcmp(parsed_command[1], "in") && !strcmp(parsed_command[2], "as"))
 	{
 		c->associated_view = aquarium__get_view(aq, parsed_command[3]);
-		if (c->associated_view)
+		if (c->associated_view && c->associated_view->taken == 0)
 		{
-			sprintf(answer_buffer, "greeting %s\n", c->associated_view->name);
+            c->associated_view->taken = 1;
+			sprintf(c->answer_buffer, "greeting %s\n", c->associated_view->name);
 		}
 		else
 		{
 			c->associated_view = aquarium__get_free_view(aq);
 			if (c->associated_view)
 			{
-				sprintf(answer_buffer, "greeting %s\n", c->associated_view->name);
+                c->associated_view->taken = 1;
+				sprintf(c->answer_buffer, "greeting %s\n", c->associated_view->name);
 			}
 			else
 			{
-				sprintf(answer_buffer, "no greeting\n");
+				sprintf(c->answer_buffer, "no greeting\n");
 			}
 		}
 	}
 	else if (tokens_len == 1 && !strcmp(parsed_command[0], "status"))
 	{
 		fish *f;
-		sprintf(answer_buffer, "\t->OK : Connecté au contrôleur, %d poissons trouvés\n", aquarium__count_fish_in_view(aq, c->associated_view));
+		sprintf(c->answer_buffer, "\t->OK : Connecté au contrôleur, %d poissons trouvés\n", aquarium__count_fish_in_view(aq, c->associated_view));
 		STAILQ_FOREACH(f, &(aq->fish_list), next)
 		{
 			if (frame__includes_snippet(c->associated_view->frame, f->frame))
 			{
-				sprintf(answer_buffer, "%s\tFish %s at %dx%d,%dx%d %s\n", answer_buffer, f->name, f->frame->x, f->frame->y, f->frame->width, f->frame->height, f->is_started ? "started" : "notStarted");
+				sprintf(c->answer_buffer, "%s\tFish %s at %dx%d,%dx%d %s\n", c->answer_buffer, f->name, f->frame->x, f->frame->y, f->frame->width, f->frame->height, f->is_started ? "started" : "notStarted");
 			}
 		}
 	}
@@ -94,11 +97,11 @@ void command__from_client(char *command_buffer, char *answer_buffer, connection 
 		int err = aquarium__add_fish(aq, f);
 		if (err == -1)
 		{
-			sprintf(answer_buffer, "NOK\n");
+			sprintf(c->answer_buffer, "NOK\n");
 		}
 		else
 		{
-			sprintf(answer_buffer, "OK\n");
+			sprintf(c->answer_buffer, "OK\n");
 		}
 	}
 	else if (tokens_len == 2 && !strcmp(parsed_command[0], "delFish"))
@@ -106,11 +109,11 @@ void command__from_client(char *command_buffer, char *answer_buffer, connection 
 		int err = aquarium__del_fish(aq, parsed_command[1]);
 		if (err == -1)
 		{
-			sprintf(answer_buffer, "NOK\n");
+			sprintf(c->answer_buffer, "NOK\n");
 		}
 		else
 		{
-			sprintf(answer_buffer, "OK\n");
+			sprintf(c->answer_buffer, "OK\n");
 		}
 	}
 	else if (tokens_len == 2 && !strcmp(parsed_command[0], "startFish"))
@@ -119,41 +122,40 @@ void command__from_client(char *command_buffer, char *answer_buffer, connection 
 		if (f)
 		{
 			f->is_started = 1;
-			sprintf(answer_buffer, "OK\n");
+			sprintf(c->answer_buffer, "OK\n");
 		}
 		else
 		{
-			sprintf(answer_buffer, "NOK\n");
+			sprintf(c->answer_buffer, "NOK\n");
 		}
 	}
 	else if (tokens_len == 2 && !strcmp(parsed_command[0], "log") && !strcmp(parsed_command[1], "out"))
 	{
 		c->status = DISCONNECTED;
-		close(c->socket_fd);
+		sprintf(c->answer_buffer, "bye\n");
 	}
 	else
 	{
-		sprintf(answer_buffer, "NOK\n");
+		sprintf(c->answer_buffer, "NOK\n");
 	}
 }
 
 void *connection__ls(void *conn)
 {
 	connection *c = (connection *)conn;
-	char answer_buffer[BUFFER_MAX_SIZE];
 	while (c->status == CONNECTED)
 	{
 		fish *f;
-		sprintf(answer_buffer, "list");
-		STAILQ_FOREACH(f, &(aq->fish_list), next)
+		sprintf(c->answer_buffer, "list");
+		STAILQ_FOREACH(f, &(controller->aquarium->fish_list), next)
 		{
 			if (f->is_started && frame__includes_snippet(c->associated_view->frame, f->frame))
 			{
-				sprintf(answer_buffer, "%s [%s at %dx%d,%dx%d,%d]", answer_buffer, f->name, f->frame->x, f->frame->y, f->frame->width, f->frame->height, 5);
+				sprintf(c->answer_buffer, "%s [%s at %dx%d,%dx%d,%d]", c->answer_buffer, f->name, f->frame->x, f->frame->y, f->frame->width, f->frame->height, 5);
 			}
 		}
-		sprintf(answer_buffer, "%s\n", answer_buffer);
-		write(c->socket_fd, answer_buffer, strlen(answer_buffer));
+		sprintf(c->answer_buffer, "%s\n", c->answer_buffer);
+		write(c->socket_fd, c->answer_buffer, strlen(c->answer_buffer));
 		sleep(1);
 	}
 	pthread_exit(NULL);

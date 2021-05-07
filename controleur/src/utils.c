@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "util.h"
+#include "utils.h"
 
 void error(char *message)
 {
@@ -22,23 +21,6 @@ void util__parser(char *parsed_message[], char *message, char *separator)
 {
     message[strlen(message) - 1] = ' ';
     char *token = strtok(message, separator);
-    if (token != NULL)
-    {
-        parsed_message[0] = token;
-        int args = 1;
-        while (token != NULL)
-        {
-            token = strtok(NULL, separator);
-            parsed_message[args++] = token;
-        }
-        parsed_message[args] = NULL;
-    }
-}
-
-void myParser(char *parsed_message[], char *message, char *separator)
-{
-    char *token;
-    token = strtok(message, separator);
     if (token != NULL)
     {
         parsed_message[0] = token;

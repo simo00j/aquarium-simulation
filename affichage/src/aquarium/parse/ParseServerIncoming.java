@@ -26,7 +26,7 @@ public class ParseServerIncoming implements Runnable {
                 } else if (scanned.startsWith("bye") || scanned.startsWith("no greeting")) {
                     this.connection.endConnection();
                     System.exit(0);
-                } else if (scanned.startsWith("greeting") || scanned.startsWith("pong")) {
+                } else if (scanned.startsWith("greeting")) {
                     Parser.parseGreeting(scanned);
                     connection.launch();
                 } else if (scanned.startsWith("\t->OK")) {

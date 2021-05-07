@@ -1,5 +1,5 @@
-#ifndef __FISH__H__
-#define __FISH__H__
+#ifndef FISH_H
+#define FISH_H
 
 #include <sys/queue.h>
 #include "frame.h"
@@ -18,4 +18,4 @@ typedef struct fish
 fish *fish__create(char *name, frame *frame);
 void fish__free(fish *fish);
 
-#endif //__FISH__H__
+#endif //FISH_H

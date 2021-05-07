@@ -1,6 +1,7 @@
 package aquarium.gui;
 
 import aquarium.Connection;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -23,7 +24,12 @@ public class Prompt {
     public Prompt(Connection connection) {
         this.connection = connection;
         this.stage = new Stage();
-        stage.setTitle("Client prompt");
+        this.stage.setTitle("Client prompt");
+        this.stage.setOnCloseRequest(e -> {
+            connection.endConnection();
+            Platform.exit();
+            System.exit(0);
+        });
         VBox box = new VBox(5);
         TextField command = new TextField();
         command.setStyle("-fx-text-box-border: #00ff00; -fx-focus-color: #00ff00; -fx-control-inner-background: #2d2d2d; -fx-font-family: Consolas; -fx-highlight-fill: #00ff00; -fx-highlight-text-fill: #2d2d2d; -fx-text-fill: #00ff00; ");
@@ -60,11 +66,6 @@ public class Prompt {
         statusButton.setStyle("-fx-background-color: green; -fx-text-fill: white;");
         statusButton.setOnAction(actionEvent -> {
             connection.sendCommand("status");
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
         });
 
         GridPane buttons = new GridPane();

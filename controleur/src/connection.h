@@ -1,17 +1,12 @@
-#ifndef __CONNECTION__H__
-#define __CONNECTION__H__
+#ifndef CONNECTION_H
+#define CONNECTION_H
 
+#include <sys/queue.h>
+#include <pthread.h>
 #include "view.h"
+#include "utils.h"
 
-#define MAX_CONNECTIONS 50
 #define BUFFER_MAX_SIZE 256
-
-typedef enum status
-{
-    CONNECTED,
-    PAUSED,
-    DISCONNECTED,
-} status;
 
 typedef struct connection
 {
@@ -21,9 +16,12 @@ typedef struct connection
     view *associated_view;
     status status;
     int timeout;
+    pthread_t thread;
+    STAILQ_ENTRY(connection)
+    next;
 } connection;
 
 void *connection__start(void *c);
-void *connection__end(int socket_fd);
+void connection__end(int socket_fd);
 
-#endif //__CONNECTION__H__
+#endif //CONNECTION_H

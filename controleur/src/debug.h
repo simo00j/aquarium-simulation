@@ -1,7 +1,7 @@
-#ifndef __DEBUG__H__
-#define __DEBUG__H__
+#ifndef DEBUG_H
+#define DEBUG_H
 
-#define DEBUG 1
+#define DEBUG 0
 #if DEBUG
 #define DEBUG_OUT(...)                         \
     do                                         \
@@ -11,4 +11,4 @@
 #else
 #define DEBUG_OUT(...)
 #endif //DEBUG
-#endif //__DEBUG__H__
+#endif //DEBUG_H
