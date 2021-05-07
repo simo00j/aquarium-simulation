@@ -26,6 +26,7 @@ int aquarium__add_fish(aquarium *aq, fish *f);
 int aquarium__del_fish(aquarium *aq, char *name);
 int aquarium__add_view(aquarium *aq, view *v);
 int aquarium__del_view(aquarium *aq, char *name);
+int aquarium__count_views(aquarium *aq);
 view *aquarium__get_free_view(aquarium *aq);
 view *aquarium__get_view(aquarium *aq, char *name);
 fish *aquarium__get_fish(aquarium *aq, char *name);

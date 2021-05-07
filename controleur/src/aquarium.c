@@ -95,7 +95,9 @@ int aquarium__add_view(aquarium *aq, view *v)
             return -1;
         }
     }
-    STAILQ_INSERT_HEAD(&(aq->views_list), view, next);
+    printf("la\n");
+    //STAILQ_INSERT_TAIL(&(aq->views_list), view, next);
+    printf("apres la\n");
     return 0;
 }
 
@@ -104,9 +106,10 @@ int aquarium__del_view(aquarium *aq, char *name)
     view *v;
     STAILQ_FOREACH(v, &(aq->views_list), next)
     {
-        if (strcmp(v->name, name))
+        if (!strcmp(v->name, name))
         {
             STAILQ_REMOVE(&(aq->views_list), v, view, next);
+            view__free(v);
             return 0;
         }
     }
@@ -164,6 +167,17 @@ int aquarium__count_fish_in_view(aquarium *aq, view *v)
         }
     }
     return i;
+}
+
+int aquarium__count_views(aquarium *aq)
+{
+    view *v;
+    int i = 0;
+    STAILQ_FOREACH(v, &(aq->views_list), next)
+    {
+        i++;
+    }
+    return i ;
 }
 
 void aquarium__free(aquarium *aquarium)

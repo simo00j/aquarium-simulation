@@ -26,7 +26,7 @@ void *server__interface(void *args)
         bzero(buffer, BUFFER_MAX_SIZE);
         bzero(answer_buffer, BUFFER_MAX_SIZE);
         fgets(buffer, BUFFER_MAX_SIZE - 1, stdin);
-        command__from_server(buffer, answer_buffer);
+        command__from_server(buffer, answer_buffer,controller->aquarium);
         printf("%s\n", answer_buffer);
     }
     return (void *)0;

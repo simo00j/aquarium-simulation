@@ -160,14 +160,75 @@ void *connection__ls(void *conn)
 	}
 	pthread_exit(NULL);
 }
-
-void command__from_server(char *command_buffer, char *answer_buffer)
+///////////////////////////////////////////////////////////////
+void command__from_server(char *command_buffer, char *answer_buffer, aquarium *aq)
 {
 	char *parsed_command[COMMAND__MAX_SIZE];
 	util__parser(parsed_command, command_buffer, " ");
 	int tokens_len = util__count_tokens(parsed_command);
 
-	//TODO: implemets the commands related to the controller. This must not be very complicated
+	if (tokens_len == 2 && !strcmp(parsed_command[0], "load"))
+	{	
+		char * path = (char*) malloc(50);
+		strcpy(path,"data/");
+		strcat(path,parsed_command[1]);
+		strcat(path,".txt");
+		FILE *f = fopen(path, "r");
+		if(f!=0)
+		{
+			aq=aquarium__load(f);
+			sprintf(answer_buffer,"\t-> Aquarium loaded ! ( %d display view)", aquarium__count_views(aq));
+			fclose(f);
+		}
+		else 
+		{
+			sprintf(answer_buffer,"\t->NOK");
+
+		}
+		free(path);
+	}
+	else if (tokens_len == 2 && !strcmp(parsed_command[0], "show"))
+	{
+		view * v;
+		sprintf(answer_buffer, "\t%dx%d", aq->frame->width, aq->frame->height);
+		STAILQ_FOREACH(v, &(aq->views_list), next)
+		{
+			sprintf(answer_buffer, "%s\n\t%s %dx%d+%d+%d", answer_buffer, v->name, v->frame->x, v->frame->y, v->frame->width, v->frame->height);
+		}
+	}
+	else if (tokens_len == 4 && !strcmp(parsed_command[0], "add"))
+	{
+		frame *frame = frame__from_str(parsed_command[3]);
+		view *v = view__create(parsed_command[2], frame);
+		if(aquarium__add_view(aq, v) == -1)
+		{
+			sprintf(answer_buffer, "\t->NOK");
+		}
+		else
+		{
+			sprintf(answer_buffer, "\t-> view added");
+		}
+	}
+	else if (tokens_len == 3 && !strcmp(parsed_command[0], "del"))
+	{
+		if(aquarium__del_view(aq, parsed_command[2])==-1)
+		{
+			sprintf(answer_buffer, "\t->NOK");
+		}
+		else
+		{
+			sprintf(answer_buffer,"\t-> view %s deleted", parsed_command[2]);
+		}	
+	}
+	else if (tokens_len == 2 && !strcmp(parsed_command[0], "save"))
+	{
+		aquarium__save(aq);
+		sprintf(answer_buffer,"\t-> Aquarium saved ! ( %d display view)", aquarium__count_views(aq));
+	}
+	else
+	{
+		sprintf(answer_buffer,"\t->NOK");
+	}
 	(void)tokens_len;
 	(void)answer_buffer;
 }
