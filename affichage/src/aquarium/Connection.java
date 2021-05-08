@@ -37,7 +37,7 @@ public class Connection {
         ServerIncomingThread.start();
 
         primaryStage.setOnCloseRequest(e -> {
-            endConnection();
+            this.endConnection();
             Platform.exit();
             System.exit(0);
         });
@@ -46,7 +46,7 @@ public class Connection {
     public void launch() {
         Thread pingThread = new Thread(new Ping(this.client.out));
         pingThread.setDaemon(true);
-        //pingThread.start();
+        pingThread.start();
 
         Platform.runLater(() -> {
             this.viewer.stage.setTitle(Config.properties.getProperty("id"));
@@ -56,13 +56,13 @@ public class Connection {
     }
 
     public void updateFish(Fish fish) {
-        Fish oldFish = fishList.stream().filter(f -> f.getName().equals(fish.getName())).collect(Collectors.toList()).get(0);
+        Fish oldFish = this.fishList.stream().filter(f -> f.getName().equals(fish.getName())).collect(Collectors.toList()).get(0);
         oldFish.updateFish(fish);
         Platform.runLater(oldFish::move);
     }
 
     public void addFish(Fish fish) {
-        fishList.add(fish);
+        this.fishList.add(fish);
         Platform.runLater(() -> this.viewer.pane.getChildren().add(fish.getImageView()));
     }
 
@@ -96,6 +96,7 @@ public class Connection {
     }
 
     public void endConnection() {
+        this.sendCommand(("log out"));
         try {
             this.client.getSocket().close();
         } catch (IOException e) {

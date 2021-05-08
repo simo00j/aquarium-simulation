@@ -26,7 +26,7 @@ public class Parser {
     }
 
     public static void parseFishList(String str, Connection connection) {
-        String regex = "\\[(?<name>[a-zA-Z]+) at (?<destinationX>\\d+)x(?<destinationY>\\d+),(?<fishWidth>\\d+)x(?<fishHeight>\\d+),(?<duration>\\d+)]";
+        String regex = "\\[(?<name>[a-zA-Z_0-9]+) at (?<destinationX>\\d+)x(?<destinationY>\\d+),(?<fishWidth>\\d+)x(?<fishHeight>\\d+),(?<duration>\\d+)]";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(str.replace("list ", ""));
         while (matcher.find()) {

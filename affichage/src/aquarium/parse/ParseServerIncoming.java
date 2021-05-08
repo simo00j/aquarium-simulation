@@ -18,17 +18,20 @@ public class ParseServerIncoming implements Runnable {
                 final String scanned = this.connection.client.in.readLine();
                 this.connection.logger.info("< " + scanned);
                 if (scanned.startsWith("list")) {
-                    if (connection.commandsList.getLast().equals("getFishesContinuously")) {
-                        Parser.parseFishList(scanned, connection);
-                    } else if (connection.commandsList.getLast().equals("getFishes")) {
+                    if (this.connection.commandsList.getLast().equals("getFishes")) {
+                        this.connection.sendCommand("getFishesContinuously");
                         Parser.parseGetFishes(scanned, connection);
+                        this.connection.commandsList.addLast("getFishesContinuously");
+                        this.connection.sendCommand("getFishesContinuously");
+                    } else {
+                        Parser.parseFishList(scanned, this.connection);
                     }
                 } else if (scanned.startsWith("bye") || scanned.startsWith("no greeting")) {
                     this.connection.endConnection();
                     System.exit(0);
                 } else if (scanned.startsWith("greeting")) {
                     Parser.parseGreeting(scanned);
-                    connection.launch();
+                    this.connection.launch();
                 } else if (scanned.startsWith("\t->OK")) {
                     this.connection.prompt.addResponse(scanned);
                 } else if (scanned.startsWith("OK")) {
@@ -48,7 +51,7 @@ public class ParseServerIncoming implements Runnable {
         }
 
         catch (IOException e) {
-            connection.logger.severe("No server is listening port " + Config.properties.getProperty("controller-port"));
+            this.connection.logger.severe("No server is listening port " + Config.properties.getProperty("controller-port"));
         }
     }
 }

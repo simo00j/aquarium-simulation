@@ -53,3 +53,6 @@ dkms.conf
 
 # VsCode
 .vscode/
+controleur/tst/*.txt
+controleur/.idea/
+controleur/README.md

@@ -11,10 +11,9 @@ aquarium *aquarium__empty()
     return aq;
 }
 
-struct aquarium *aquarium__load(FILE *f)
+void aquarium__load(aquarium *aq, FILE *f)
 {
     DEBUG_OUT("entering aquarium__load\n");
-    aquarium *aq = malloc(sizeof(aquarium));
     char line[256];
     view *v;
     aq->frame = malloc(sizeof(frame));
@@ -32,13 +31,12 @@ struct aquarium *aquarium__load(FILE *f)
         STAILQ_INSERT_HEAD(&(aq->views_list), v, next);
     }
     DEBUG_OUT("quitting aquarium__load\n");
-    return aq;
 }
 
-void aquarium__save(aquarium *aq)
+void aquarium__save(aquarium *aq, char *filename)
 {
     DEBUG_OUT("entering aquarium__save\n");
-    FILE *f = fopen("aquarium1.txt", "w");
+    FILE *f = fopen(filename, "w");
     fprintf(f, "%dx%d\n", aq->frame->width, aq->frame->height);
 
     view *v;
@@ -88,6 +86,7 @@ int aquarium__del_fish(aquarium *aq, char *name)
 int aquarium__add_view(aquarium *aq, view *v)
 {
     view *view;
+    DEBUG_OUT(" enteringaquarium__add_view");
     STAILQ_FOREACH(view, &(aq->views_list), next)
     {
         if (!strcmp(view->name, v->name))
@@ -95,9 +94,7 @@ int aquarium__add_view(aquarium *aq, view *v)
             return -1;
         }
     }
-    printf("la\n");
-    //STAILQ_INSERT_TAIL(&(aq->views_list), view, next);
-    printf("apres la\n");
+    STAILQ_INSERT_TAIL(&(aq->views_list), v, next);
     return 0;
 }
 
@@ -178,6 +175,18 @@ int aquarium__count_views(aquarium *aq)
         i++;
     }
     return i ;
+}
+
+
+void aquarium__update_fish_randomly(aquarium *aq){
+    fish *f;
+    STAILQ_FOREACH(f, &(aq->fish_list), next)
+    {
+        if (f->is_started)
+        {
+            frame__move_randomly(f->frame);
+        }
+    }
 }
 
 void aquarium__free(aquarium *aquarium)

@@ -2,6 +2,7 @@ package aquarium.gui;
 
 import aquarium.Config;
 import javafx.animation.*;
+import javafx.application.Platform;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.shape.LineTo;
@@ -15,7 +16,7 @@ public class Fish {
     final private ImageView iv;
     private Duration duration;
     private Point destination;
-    final private Path path;
+    private Path path;
     final private PathTransition pathTransition;
     String name;
 
@@ -29,12 +30,13 @@ public class Fish {
 
         this.iv.setFitWidth((double)fish_width * Integer.parseInt(Config.properties.getProperty("viewer_width")) / 100);
         this.iv.setFitHeight((double)fish_height * Integer.parseInt(Config.properties.getProperty("viewer_height")) / 100);
-        this.iv.setX(position.getX() * Integer.parseInt(Config.properties.getProperty("viewer_width")) / 100);
-        this.iv.setY(position.getY() * Integer.parseInt(Config.properties.getProperty("viewer_height")) / 100);
-
         this.path = new Path();
-        this.path.getElements().add(new MoveTo(position.getX() * Integer.parseInt(Config.properties.getProperty("viewer_width")) / 100, position.getY() * Integer.parseInt(Config.properties.getProperty("viewer_height")) / 100));
-        this.path.getElements().add(new LineTo(destination.getX() * Integer.parseInt(Config.properties.getProperty("viewer_width")) / 100, destination.getY() * Integer.parseInt(Config.properties.getProperty("viewer_height")) / 100));
+        if (position != null){
+            this.iv.setX(position.getX() * Integer.parseInt(Config.properties.getProperty("viewer_width")) / 100);
+            this.iv.setY(position.getY() * Integer.parseInt(Config.properties.getProperty("viewer_height")) / 100);
+            this.path.getElements().add(new MoveTo(position.getX() * Integer.parseInt(Config.properties.getProperty("viewer_width")) / 100, position.getY() * Integer.parseInt(Config.properties.getProperty("viewer_height")) / 100));
+            this.path.getElements().add(new LineTo(destination.getX() * Integer.parseInt(Config.properties.getProperty("viewer_width")) / 100, destination.getY() * Integer.parseInt(Config.properties.getProperty("viewer_height")) / 100));
+        }
         this.pathTransition = new PathTransition();
         this.pathTransition.setDuration(this.duration);
         this.pathTransition.setPath(path);
@@ -59,9 +61,12 @@ public class Fish {
     public Point getDestination() { return this.destination; }
 
     public void updateFish(Fish fish) {
+        this.path = new Path();
+        this.path.getElements().add(new MoveTo(destination.getX() * Integer.parseInt(Config.properties.getProperty("viewer_width")) / 100, destination.getY() * Integer.parseInt(Config.properties.getProperty("viewer_height")) / 100));
         this.destination = fish.getDestination();
         this.duration = fish.getDuration();
         this.path.getElements().add(new LineTo(destination.getX(), destination.getY()));
+        this.pathTransition.setPath(this.path);
         this.pathTransition.setDuration(this.duration);
     }
 }

@@ -20,8 +20,8 @@ typedef struct aquarium
 } aquarium;
 
 aquarium *aquarium__empty();
-struct aquarium *aquarium__load(FILE *f);
-void aquarium__save(aquarium *aq);
+void aquarium__load(aquarium *aq, FILE *f);
+void aquarium__save(aquarium *aq, char *filename);
 int aquarium__add_fish(aquarium *aq, fish *f);
 int aquarium__del_fish(aquarium *aq, char *name);
 int aquarium__add_view(aquarium *aq, view *v);
@@ -31,6 +31,7 @@ view *aquarium__get_free_view(aquarium *aq);
 view *aquarium__get_view(aquarium *aq, char *name);
 fish *aquarium__get_fish(aquarium *aq, char *name);
 int aquarium__count_fish_in_view(aquarium *aq, view *v);
+void aquarium__update_fish_randomly(aquarium *aq);
 void aquarium__free(aquarium *aq);
 
 #endif //AQUARIUM_H
