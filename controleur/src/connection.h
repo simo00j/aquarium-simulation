@@ -23,5 +23,6 @@ typedef struct connection
 
 void *connection__start(void *c);
 void connection__end(int socket_fd);
+void connection__free(connection * c);
 
 #endif //CONNECTION_H

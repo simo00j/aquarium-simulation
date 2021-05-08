@@ -11,8 +11,8 @@ public class Viewer {
 
     public Viewer(Stage primaryStage){
         this.stage = primaryStage;
-        this.stage.setHeight(Integer.parseInt(Config.properties.getProperty("viewer_height")));
-        this.stage.setWidth(Integer.parseInt(Config.properties.getProperty("viewer_width")));
+        this.stage.setHeight(Integer.parseInt(Config.properties.getProperty("viewer-height")));
+        this.stage.setWidth(Integer.parseInt(Config.properties.getProperty("viewer-width")));
         this.stage.setResizable(false);
         this.pane = new BorderPane();
         this.pane.setStyle("-fx-background-image: url('file:resources/images/background.jpg'); -fx-background-repeat: no-repeat; -fx-background-size: cover, auto;");

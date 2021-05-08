@@ -33,8 +33,18 @@ void command__from_client(connection *c, aquarium *aq)
 	}
 	else if (tokens_len == 1 && !strcmp(parsed_command[0], "getFishes"))
 	{
-		//TODO: implemet the reponse to this request
-		sprintf(c->answer_buffer, "list [PoissonRouge at 90x4,10x4,0] [PoissonClown at 20x80,12x6,0]\n");
+		fish *f;
+        sprintf(c->answer_buffer, "list ");
+        STAILQ_FOREACH(f, &(controller->aquarium->fish_list), next)
+        {
+            if (frame__includes_snippet(c->associated_view->frame, f->frame))
+            {
+                frame *relative_frame = frame__get_relative(f->frame, c->associated_view->frame);
+                sprintf(c->answer_buffer, "%s [%s at %dx%d,%dx%d,%d]", c->answer_buffer, f->name, relative_frame->x, relative_frame->y,relative_frame->width, relative_frame->height, 5);
+                free(relative_frame);
+            }
+        }
+        sprintf(c->answer_buffer, "%s\n", c->answer_buffer);
 	}
 	else if (tokens_len == 1 && !strcmp(parsed_command[0], "hello"))
 	{
@@ -48,11 +58,14 @@ void command__from_client(connection *c, aquarium *aq)
             else
             {
                 sprintf(c->answer_buffer, "no greeting\n");
+                c->status = DISCONNECTED;
             }
 		}
-		else {
-            sprintf(c->answer_buffer, "NOK\n");
-		}
+        else
+        {
+            sprintf(c->answer_buffer, "no greeting\n");
+            c->status = DISCONNECTED;
+        }
 	}
 	else if (tokens_len == 4 && !strcmp(parsed_command[0], "hello") && !strcmp(parsed_command[1], "in") && !strcmp(parsed_command[2], "as"))
 	{
@@ -74,17 +87,20 @@ void command__from_client(connection *c, aquarium *aq)
                 else
                 {
                     sprintf(c->answer_buffer, "no greeting\n");
+                    c->status = DISCONNECTED;
                 }
             }
         }
-        else {
-            sprintf(c->answer_buffer, "NOK\n");
+        else
+        {
+            sprintf(c->answer_buffer, "no greeting\n");
+            c->status = DISCONNECTED;
         }
 	}
 	else if (tokens_len == 1 && !strcmp(parsed_command[0], "status"))
 	{
 		fish *f;
-		sprintf(c->answer_buffer, "\t->OK : Connecté au contrôleur, %d poissons trouvés", aquarium__count_fish_in_view(aq, c->associated_view));
+		sprintf(c->answer_buffer, "\t->OK : Connecté au contrôleur, %d poisson(s) trouvé(s)", aquarium__count_fish_in_view(aq, c->associated_view));
 		STAILQ_FOREACH(f, &(aq->fish_list), next)
 		{
 			if (frame__includes_snippet(c->associated_view->frame, f->frame))
@@ -93,6 +109,7 @@ void command__from_client(connection *c, aquarium *aq)
 				sprintf(c->answer_buffer, "%s\n\tFish %s at %dx%d,%dx%d %s\n", c->answer_buffer, f->name, relative_frame->x, relative_frame->y, relative_frame->width, relative_frame->height, f->is_started ? "started" : "notStarted");
 			}
 		}
+        sprintf(c->answer_buffer, "%s\n", c->answer_buffer);
 	}
 	else if (tokens_len == 1 && !strcmp(parsed_command[0], "getFishesContinuously"))
 	{
@@ -133,7 +150,7 @@ void command__from_client(connection *c, aquarium *aq)
 	else if (tokens_len == 2 && !strcmp(parsed_command[0], "startFish"))
 	{
 		fish *f = aquarium__get_fish(aq, parsed_command[1]);
-		if (f)
+		if (f && f->is_started == 0)
 		{
 			f->is_started = 1;
 			sprintf(c->answer_buffer, "OK\n");
@@ -166,11 +183,17 @@ void *connection__get_fish_continuously(void *conn)
             DEBUG_OUT("connection__get_fish_continuously : viewer frame : %s\n", frame__to_str(c->associated_view->frame));
             DEBUG_OUT("connection__get_fish_continuously : fish frame : %s\n", frame__to_str(f->frame));
             DEBUG_OUT("connection__get_fish_continuously : testing inclusion\n");
-			if (f->is_started && frame__includes_snippet(c->associated_view->frame, f->frame))
+			if (frame__includes_snippet(c->associated_view->frame, f->frame))
 			{
                 DEBUG_OUT("connection__get_fish_continuously : test succes\n");
 			    frame *relative_frame = frame__get_relative(f->frame, c->associated_view->frame);
-				sprintf(c->answer_buffer, "%s [%s at %dx%d,%dx%d,%d]", c->answer_buffer, f->name, relative_frame->x, relative_frame->y,relative_frame->width, relative_frame->height, 5);
+                DEBUG_OUT("connection__get_fish_continuously : got relative frame\n");
+                if (f->is_started == 1) {
+                    sprintf(c->answer_buffer, "%s [%s at %dx%d,%dx%d,%d]", c->answer_buffer, f->name, relative_frame->x, relative_frame->y,relative_frame->width, relative_frame->height, 5);
+                } else {
+                    sprintf(c->answer_buffer, "%s [%s at %dx%d,%dx%d,%d]", c->answer_buffer, f->name, relative_frame->x, relative_frame->y,relative_frame->width, relative_frame->height, 0);
+                }
+                DEBUG_OUT("connection__get_fish_continuously : wrote to buffer\n");
 				free(relative_frame);
 			}
 		}

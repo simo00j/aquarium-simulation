@@ -1,10 +1,9 @@
 package aquarium.gui;
 
-import aquarium.Config;
 import javafx.animation.*;
-import javafx.application.Platform;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.shape.CubicCurveTo;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
@@ -16,7 +15,6 @@ public class Fish {
     final private ImageView iv;
     private Duration duration;
     private Point destination;
-    private Path path;
     final private PathTransition pathTransition;
     String name;
 
@@ -28,14 +26,14 @@ public class Fish {
         String ImagePath = "file:resources/images/" + name.split("_")[0] + ".png";
         this.iv.setImage(new Image(ImagePath));
 
-        this.iv.setFitWidth((double)fish_width * Integer.parseInt(Config.properties.getProperty("viewer_width")) / 100);
-        this.iv.setFitHeight((double)fish_height * Integer.parseInt(Config.properties.getProperty("viewer_height")) / 100);
-        this.path = new Path();
+        this.iv.setFitWidth(fish_width);
+        this.iv.setFitHeight(fish_height);
+        Path path = new Path();
         if (position != null){
-            this.iv.setX(position.getX() * Integer.parseInt(Config.properties.getProperty("viewer_width")) / 100);
-            this.iv.setY(position.getY() * Integer.parseInt(Config.properties.getProperty("viewer_height")) / 100);
-            this.path.getElements().add(new MoveTo(position.getX() * Integer.parseInt(Config.properties.getProperty("viewer_width")) / 100, position.getY() * Integer.parseInt(Config.properties.getProperty("viewer_height")) / 100));
-            this.path.getElements().add(new LineTo(destination.getX() * Integer.parseInt(Config.properties.getProperty("viewer_width")) / 100, destination.getY() * Integer.parseInt(Config.properties.getProperty("viewer_height")) / 100));
+            this.iv.setX(position.getX());
+            this.iv.setY(position.getY());
+            path.getElements().add(new MoveTo(position.getX(), position.getY()));
+            path.getElements().add(new LineTo(destination.getX(), destination.getY()));
         }
         this.pathTransition = new PathTransition();
         this.pathTransition.setDuration(this.duration);
@@ -46,6 +44,10 @@ public class Fish {
 
     public ImageView getImageView() {
         return this.iv;
+    }
+
+    public PathTransition getPathTransition() {
+        return pathTransition;
     }
 
     public void move(){
@@ -61,12 +63,20 @@ public class Fish {
     public Point getDestination() { return this.destination; }
 
     public void updateFish(Fish fish) {
-        this.path = new Path();
-        this.path.getElements().add(new MoveTo(destination.getX() * Integer.parseInt(Config.properties.getProperty("viewer_width")) / 100, destination.getY() * Integer.parseInt(Config.properties.getProperty("viewer_height")) / 100));
+        Path path = new Path();
+        path.getElements().add(new MoveTo(this.destination.getX() , this.destination.getY()));
         this.destination = fish.getDestination();
         this.duration = fish.getDuration();
-        this.path.getElements().add(new LineTo(destination.getX(), destination.getY()));
-        this.pathTransition.setPath(this.path);
+        CubicCurveTo cubicCurveTo = new CubicCurveTo();
+        cubicCurveTo.setControlX1(400.0f);
+        cubicCurveTo.setControlY1(40.0f);
+        cubicCurveTo.setControlX2(175.0f);
+        cubicCurveTo.setControlY2(250.0f);
+        cubicCurveTo.setX(this.destination.getX());
+        cubicCurveTo.setY(this.destination.getY());
+        path.getElements().add(cubicCurveTo);
+        path.getElements().add(new LineTo(this.destination.getX(), this.destination.getY()));
+        this.pathTransition.setPath(path);
         this.pathTransition.setDuration(this.duration);
     }
 }
