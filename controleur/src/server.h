@@ -6,6 +6,7 @@
 typedef struct server {
     int port;
     int timeout;
+    int fish_update_interval;
     status status;
     aquarium *aquarium;
     STAILQ_HEAD(, connection)

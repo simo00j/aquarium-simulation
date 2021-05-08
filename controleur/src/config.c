@@ -9,14 +9,14 @@
 
 int port = -1;
 int timeout_value = -1;
+int fish_update = -1;
 int parsed = 0;
 
 int get_config_value(char *tokens[])
 {
     if (tokens[0] != NULL && tokens[1] != NULL)
         return atoi(tokens[1]);
-    else
-        return -1;
+    return -1;
 }
 
 void config__parser(FILE *config_file)
@@ -34,11 +34,13 @@ void config__parser(FILE *config_file)
         if (config_value != -1)
         {
             if (!strcmp(tokens[0], "controller-port"))
-            {
                 port = config_value;
-            }
+            
             else if (!strcmp(tokens[0], "display-timeout-value"))
                 timeout_value = config_value;
+
+            else if (!strcmp(tokens[0], "fish-update-interval"))
+                fish_update = config_value;
         }
     }
 }
@@ -64,7 +66,11 @@ int config__get_port()
     init_config();
     if (port == -1)
     {
-        error("Numero de port requis dans le fichier de configuration ( contoleur/controller.cfg )\nUsage\n\tcontroller-port = <numero de port> \n\tdisplay-timeout-value = <duree (s)>\n");
+        error("Numero de port requis dans le fichier de configuration ( contoleur/controller.cfg )\
+        \nUsage\n \
+        controller-port = <numero de port> \n \
+        display-timeout-value = <duree (s)>\n \
+        fish-update-interval =  <duree (s)>\n");
     }
     return port;
 }
@@ -74,7 +80,25 @@ int config__get_timeout()
     init_config();
     if (timeout_value == -1)
     {
-        error("Timeout requis dans le fichier de configuration ( contoleur/controller.cfg )\nUsage\n\tcontroller-port = <numero de port> \n\tdisplay-timeout-value = <duree (s)>\n");
+        error("Timeout requis dans le fichier de configuration ( contoleur/controller.cfg )\
+        \nUsage\n \
+        controller-port = <numero de port> \n \
+        display-timeout-value = <duree (s)>\n \
+        fish-update-interval =  <duree (s)>\n");
     }
     return timeout_value;
+}
+
+int config__get_fish_interval()
+{
+    init_config();
+    if (fish_update == -1)
+    {
+        error("Fish update interval requis dans le fichier de configuration ( contoleur/controller.cfg )\
+        \nUsage\n \
+        controller-port = <numero de port> \n \
+        display-timeout-value = <duree (s)>\n \
+        fish-update-interval =  <duree (s)>\n");   
+    }
+    return fish_update;
 }

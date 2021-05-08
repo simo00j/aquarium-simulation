@@ -96,6 +96,7 @@ int main(void)
     controller = malloc(sizeof(server));
     controller->port = config__get_port();
     controller->timeout = config__get_timeout();
+    controller->fish_update_interval = config__get_fish_interval();
     server__launch(controller);
     return 0;
 }
