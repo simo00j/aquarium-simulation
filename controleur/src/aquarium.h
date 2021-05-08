@@ -21,17 +21,17 @@ typedef struct aquarium
 
 aquarium *aquarium__empty();
 void aquarium__load(aquarium *aq, FILE *f);
-void aquarium__save(aquarium *aq, char *filename);
+void aquarium__save(const aquarium *aq, const char *filename);
 int aquarium__add_fish(aquarium *aq, fish *f);
-int aquarium__del_fish(aquarium *aq, char *name);
+int aquarium__del_fish(aquarium *aq, const char *name);
 int aquarium__add_view(aquarium *aq, view *v);
-int aquarium__del_view(aquarium *aq, char *name);
-int aquarium__count_views(aquarium *aq);
-view *aquarium__get_free_view(aquarium *aq);
-view *aquarium__get_view(aquarium *aq, char *name);
-fish *aquarium__get_fish(aquarium *aq, char *name);
-int aquarium__count_fish_in_view(aquarium *aq, view *v);
-void aquarium__update_fish_randomly(aquarium *aq);
+int aquarium__del_view(aquarium *aq, const char *name);
+int aquarium__count_views(const aquarium *aq);
+view *aquarium__get_free_view(const aquarium *aq);
+view *aquarium__get_view(const aquarium *aq, const char *name);
+fish *aquarium__get_fish(const aquarium *aq, const char *name);
+int aquarium__count_fish_in_view(const aquarium *aq, const view *v);
+void aquarium__update_fish_randomly(const aquarium *aq);
 void aquarium__free(aquarium *aq);
 
 #endif //AQUARIUM_H

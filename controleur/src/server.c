@@ -6,6 +6,7 @@
 #include <pthread.h>
 #include <signal.h>
 #include <unistd.h>
+#include <time.h>
 #include "command.h"
 #include "aquarium.h"
 #include "utils.h"
@@ -39,9 +40,9 @@ void *update_randomly(void *args)
     while (controller->status == CONNECTED)
     {
         aquarium__update_fish_randomly(controller->aquarium);
-        sleep(1);
+        sleep(5);
     }
-    return (void *)0;
+    pthread_exit(NULL);
 }
 
 int server__launch(server *server)
@@ -83,11 +84,7 @@ int server__launch(server *server)
     }
     pthread_join(thread_server, NULL);
     pthread_join(thread_update, NULL);
-    connection *c;
-    STAILQ_FOREACH(c, &(controller->connections_list), next)
-    {
-        pthread_join(c->thread, NULL);
-    }
+    aquarium__free(server->aquarium);
     return 0;
 }
 
@@ -96,6 +93,8 @@ int main(void)
     controller = malloc(sizeof(server));
     controller->port = config__get_port();
     controller->timeout = config__get_timeout();
+    srand(time(NULL));
     server__launch(controller);
+    free(controller);
     return 0;
 }

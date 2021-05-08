@@ -7,6 +7,7 @@
 #include "utils.h"
 #include "command.h"
 #include "server.h"
+#include "debug.h"
 
 extern server *controller;
 
@@ -45,11 +46,21 @@ void *connection__start(void *c)
         err = write(conn->socket_fd, conn->answer_buffer, strlen(conn->answer_buffer));
         exit_if(err < 0, "error on write()");
     }
-
-    return (void *)0;
+    DEBUG_OUT("connection ended, proceeding to free\n");
+    connection__free(conn);
+    DEBUG_OUT("connection freed, thread will now exit\n");
+    pthread_exit(NULL);
 }
 
 void connection__end(int socket_fd)
 {
     close(socket_fd);
+}
+
+void connection__free(connection * c)
+{
+    if (c->associated_view != NULL){
+        c->associated_view->taken = 0;
+    }
+    free(c);
 }

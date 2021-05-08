@@ -33,7 +33,7 @@ void aquarium__load(aquarium *aq, FILE *f)
     DEBUG_OUT("quitting aquarium__load\n");
 }
 
-void aquarium__save(aquarium *aq, char *filename)
+void aquarium__save(const aquarium *aq, const char *filename)
 {
     DEBUG_OUT("entering aquarium__save\n");
     FILE *f = fopen(filename, "w");
@@ -69,7 +69,7 @@ int aquarium__add_fish(aquarium *aq, fish *f)
     return 0;
 }
 
-int aquarium__del_fish(aquarium *aq, char *name)
+int aquarium__del_fish(aquarium *aq, const char *name)
 {
     fish *f;
     STAILQ_FOREACH(f, &(aq->fish_list), next)
@@ -98,7 +98,7 @@ int aquarium__add_view(aquarium *aq, view *v)
     return 0;
 }
 
-int aquarium__del_view(aquarium *aq, char *name)
+int aquarium__del_view(aquarium *aq, const char *name)
 {
     view *v;
     STAILQ_FOREACH(v, &(aq->views_list), next)
@@ -113,7 +113,7 @@ int aquarium__del_view(aquarium *aq, char *name)
     return -1;
 }
 
-view *aquarium__get_free_view(aquarium *aq)
+view *aquarium__get_free_view(const aquarium *aq)
 {
     view *v;
     STAILQ_FOREACH(v, &(aq->views_list), next)
@@ -126,7 +126,7 @@ view *aquarium__get_free_view(aquarium *aq)
     return NULL;
 }
 
-view *aquarium__get_view(aquarium *aq, char *name)
+view *aquarium__get_view(const aquarium *aq, const char *name)
 {
     view *v;
     STAILQ_FOREACH(v, &(aq->views_list), next)
@@ -139,7 +139,7 @@ view *aquarium__get_view(aquarium *aq, char *name)
     return NULL;
 }
 
-fish *aquarium__get_fish(aquarium *aq, char *name)
+fish *aquarium__get_fish(const aquarium *aq, const char *name)
 {
     fish *f;
     STAILQ_FOREACH(f, &(aq->fish_list), next)
@@ -152,7 +152,7 @@ fish *aquarium__get_fish(aquarium *aq, char *name)
     return NULL;
 }
 
-int aquarium__count_fish_in_view(aquarium *aq, view *v)
+int aquarium__count_fish_in_view(const aquarium *aq, const view *v)
 {
     fish *f;
     int i = 0;
@@ -166,7 +166,7 @@ int aquarium__count_fish_in_view(aquarium *aq, view *v)
     return i;
 }
 
-int aquarium__count_views(aquarium *aq)
+int aquarium__count_views(const aquarium *aq)
 {
     view *v;
     int i = 0;
@@ -178,13 +178,13 @@ int aquarium__count_views(aquarium *aq)
 }
 
 
-void aquarium__update_fish_randomly(aquarium *aq){
+void aquarium__update_fish_randomly(const aquarium *aq){
     fish *f;
     STAILQ_FOREACH(f, &(aq->fish_list), next)
     {
         if (f->is_started)
         {
-            frame__move_randomly(f->frame);
+            frame__move_randomly_inside(f->frame, aq->frame);
         }
     }
 }

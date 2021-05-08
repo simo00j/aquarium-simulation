@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -56,9 +57,18 @@ public class Connection {
     }
 
     public void updateFish(Fish fish) {
-        Fish oldFish = this.fishList.stream().filter(f -> f.getName().equals(fish.getName())).collect(Collectors.toList()).get(0);
-        oldFish.updateFish(fish);
-        Platform.runLater(oldFish::move);
+        List<Fish> oldFishList = this.fishList.stream().filter(f -> f.getName().equals(fish.getName())).collect(Collectors.toList());
+        Fish oldFish;
+        if (oldFishList.size() > 0) {
+            oldFish = oldFishList.get(0);
+            oldFish.getPathTransition().stop();
+            oldFish.updateFish(fish);
+            this.startFish(oldFish);
+        }
+        else {
+            this.addFish(fish);
+            this.startFish(fish);
+        }
     }
 
     public void addFish(Fish fish) {
@@ -69,14 +79,14 @@ public class Connection {
     public void startFish(String name){
         for (Fish f : fishList){
             if (f.getName().equals(name)) {
-                f.move();
+                this.startFish(f);
                 break;
             }
         }
     }
 
     public void startFish(Fish fish){
-        fish.move();
+        Platform.runLater(fish::move);
     }
 
     public void delFish(String name){
@@ -110,7 +120,5 @@ public class Connection {
         } else {
             sendCommand("hello");
         }
-        this.commandsList.addLast("getFishes");
-        sendCommand("getFishes");
     }
 }

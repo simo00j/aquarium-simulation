@@ -11,27 +11,26 @@ frame *frame__from_str(const char *string)
     return f;
 }
 
-char *frame__to_str(frame *frame)
+char *frame__to_str(const frame *frame)
 {
     char *str = malloc(sizeof(MAX_STR_FRAME_SIZE));
     snprintf(str, MAX_STR_FRAME_SIZE, "%dx%d,%dx%d", frame->x, frame->y, frame->width, frame->height);
     return str;
 }
 
-int frame__includes_snippet(const struct frame *frame, const struct frame *snippet)
+int frame__includes_snippet(const frame *viewer, const frame *snippet)
 {
-    return snippet->x >= frame->x && snippet->y >= frame->y &&
-           snippet->x + snippet->height <= frame->x + frame->height &&
-           snippet->y + snippet->width <= frame->y + frame->width;
+    return snippet->x >= viewer->x && snippet->y >= viewer->y &&
+           snippet->x + snippet->height <= viewer->x + viewer->height &&
+           snippet->y + snippet->width <= viewer->y + viewer->width;
 }
 
-void frame__move_randomly(frame *frame){
-    int index[] = {-1, 1};
-    frame->x += index[rand() & 1] * rand()%50;
-    frame->y += index[rand() & 1] * rand()%50;
+void frame__move_randomly_inside(frame *snippet, const frame *viewer){
+    snippet->x = rand() % viewer->width;
+    snippet->y = rand() % viewer->height;
 }
 
-frame *frame__get_absolute(frame *snippet, frame *viewer)
+frame *frame__get_absolute(const frame *snippet, const frame *viewer)
 {
     frame *f = malloc(sizeof(frame));
     f->x = snippet->x + viewer->x;
@@ -40,7 +39,7 @@ frame *frame__get_absolute(frame *snippet, frame *viewer)
     f->height = snippet->height * viewer->height / 100;
     return f;
 }
-frame *frame__get_relative(frame *snippet, frame *viewer)
+frame *frame__get_relative(const frame *snippet, const frame *viewer)
 {
     frame *f = malloc(sizeof(frame));
     f->x = snippet->x - viewer->x;
