@@ -1,11 +1,11 @@
 CC = gcc
-CFLAGS   = -Wall -Wextra
-LIBS = -pthread
+CFLAGS   = -Wall -Wextra  
+LIBS = -pthread 
 SRC_PATH = src/
 TEST_PATH = tst/
 BUILD_PATH = build/
 
-BIN = server
+BIN = server test_server 
 
 .PHONY: all
 all: $(BIN)
@@ -20,16 +20,16 @@ build:
 	mkdir $(BUILD_PATH)
 
 test_server: fake_client.o test_server.o
-	$(CC) -o test_server $(BUILD_PATH)fake_client.o $(BUILD_PATH)test_server.o $(CFLAGS)
+	$(CC) -o test_server $(BUILD_PATH)fake_client.o $(BUILD_PATH)test_server.o 
 
 %.o: $(TEST_PATH)%.c build
 	$(CC) -o $(BUILD_PATH)$@ -c $< $(CFLAGS)
 
-launch_server: clean server
-	./server
+launch_server: clean server 
+	./server 2>erreur.log
 
 launch_test_server: test_server
 	./test_server
 
 clean:
-	$(RM) *.o *~ $(BIN) $(BUILD_PATH)*
+	$(RM) *.o *~ *.log $(BIN) $(BUILD_PATH)*

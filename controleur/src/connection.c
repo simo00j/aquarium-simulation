@@ -22,8 +22,6 @@ void *connection__start(void *c)
     struct timeval time_out;
     FD_ZERO(&read_fds);
     FD_SET(conn->socket_fd, &read_fds);
-    time_out.tv_sec = 5;
-    time_out.tv_usec = 0;
 
     while (conn->status == CONNECTED && controller->status == CONNECTED)
     {

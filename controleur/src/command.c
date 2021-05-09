@@ -34,17 +34,20 @@ void command__from_client(connection *c, aquarium *aq)
 	else if (tokens_len == 1 && !strcmp(parsed_command[0], "getFishes"))
 	{
 		fish *f;
+		char answer_cpy[BUFFER_MAX_SIZE];
         sprintf(c->answer_buffer, "list ");
         STAILQ_FOREACH(f, &(controller->aquarium->fish_list), next)
         {
             if (frame__includes_snippet(c->associated_view->frame, f->frame))
             {
+				strcpy(answer_cpy, c->answer_buffer);
                 frame *relative_frame = frame__get_relative(f->frame, c->associated_view->frame);
-                sprintf(c->answer_buffer, "%s [%s at %dx%d,%dx%d,%d]", c->answer_buffer, f->name, relative_frame->x, relative_frame->y,relative_frame->width, relative_frame->height, 5);
+                sprintf(c->answer_buffer, "%s [%s at %dx%d,%dx%d,%d]", answer_cpy, f->name, relative_frame->x, relative_frame->y,relative_frame->width, relative_frame->height, 5);
                 free(relative_frame);
             }
         }
-        sprintf(c->answer_buffer, "%s\n", c->answer_buffer);
+		strcpy(answer_cpy, c->answer_buffer);
+        sprintf(c->answer_buffer, "%s\n", answer_cpy);
 	}
 	else if (tokens_len == 1 && !strcmp(parsed_command[0], "hello"))
 	{
@@ -99,6 +102,7 @@ void command__from_client(connection *c, aquarium *aq)
 	}
 	else if (tokens_len == 1 && !strcmp(parsed_command[0], "status"))
 	{
+		char answer_cpy[BUFFER_MAX_SIZE];
 		fish *f;
 		sprintf(c->answer_buffer, "\t->OK : Connecté au contrôleur, %d poisson(s) trouvé(s)", aquarium__count_fish_in_view(aq, c->associated_view));
 		STAILQ_FOREACH(f, &(aq->fish_list), next)
@@ -106,10 +110,12 @@ void command__from_client(connection *c, aquarium *aq)
 			if (frame__includes_snippet(c->associated_view->frame, f->frame))
 			{
 			    frame *relative_frame = frame__get_relative(f->frame, c->associated_view->frame);
-				sprintf(c->answer_buffer, "%s\n\tFish %s at %dx%d,%dx%d %s\n", c->answer_buffer, f->name, relative_frame->x, relative_frame->y, relative_frame->width, relative_frame->height, f->is_started ? "started" : "notStarted");
+				strcpy(answer_cpy, c->answer_buffer);
+				sprintf(c->answer_buffer, "%s\n\tFish %s at %dx%d,%dx%d %s\n", answer_cpy, f->name, relative_frame->x, relative_frame->y, relative_frame->width, relative_frame->height, f->is_started ? "started" : "notStarted");
 			}
 		}
-        sprintf(c->answer_buffer, "%s\n", c->answer_buffer);
+		strcpy(answer_cpy, c->answer_buffer);
+        sprintf(c->answer_buffer, "%s\n", answer_cpy);
 	}
 	else if (tokens_len == 1 && !strcmp(parsed_command[0], "getFishesContinuously"))
 	{
@@ -175,6 +181,7 @@ void *connection__get_fish_continuously(void *conn)
 {
 	connection *c = (connection *)conn;
     fish *f;
+	char answer_cpy[BUFFER_MAX_SIZE];
 	while (c->status == CONNECTED && controller->status == CONNECTED)
 	{
 		sprintf(c->answer_buffer, "list ");
@@ -188,18 +195,20 @@ void *connection__get_fish_continuously(void *conn)
                 DEBUG_OUT("connection__get_fish_continuously : test succes\n");
 			    frame *relative_frame = frame__get_relative(f->frame, c->associated_view->frame);
                 DEBUG_OUT("connection__get_fish_continuously : got relative frame\n");
+				strcpy(answer_cpy, c->answer_buffer);
                 if (f->is_started == 1) {
-                    sprintf(c->answer_buffer, "%s [%s at %dx%d,%dx%d,%d]", c->answer_buffer, f->name, relative_frame->x, relative_frame->y,relative_frame->width, relative_frame->height, 5);
+                    sprintf(c->answer_buffer, "%s [%s at %dx%d,%dx%d,%d]", answer_cpy, f->name, relative_frame->x, relative_frame->y,relative_frame->width, relative_frame->height, 5);
                 } else {
-                    sprintf(c->answer_buffer, "%s [%s at %dx%d,%dx%d,%d]", c->answer_buffer, f->name, relative_frame->x, relative_frame->y,relative_frame->width, relative_frame->height, 0);
+                    sprintf(c->answer_buffer, "%s [%s at %dx%d,%dx%d,%d]", answer_cpy, f->name, relative_frame->x, relative_frame->y,relative_frame->width, relative_frame->height, 0);
                 }
                 DEBUG_OUT("connection__get_fish_continuously : wrote to buffer\n");
 				free(relative_frame);
 			}
 		}
-		sprintf(c->answer_buffer, "%s\n", c->answer_buffer);
+		strcpy(answer_cpy, c->answer_buffer);
+		sprintf(c->answer_buffer, "%s\n", answer_cpy);
 		write(c->socket_fd, c->answer_buffer, strlen(c->answer_buffer));
-		sleep(5);
+		sleep(c->fish_update);
 	}
 	pthread_exit(NULL);
 }
@@ -233,10 +242,12 @@ void command__from_server(char *command_buffer, char *answer_buffer, aquarium *a
 	else if (tokens_len == 2 && !strcmp(parsed_command[0], "show"))
 	{
 		view * v;
+		char answer_cpy[BUFFER_MAX_SIZE];
 		sprintf(answer_buffer, "%dx%d", aq->frame->width, aq->frame->height);
 		STAILQ_FOREACH(v, &(aq->views_list), next)
 		{
-			sprintf(answer_buffer, "%s\n%s %dx%d+%d+%d", answer_buffer, v->name, v->frame->x, v->frame->y, v->frame->width, v->frame->height);
+			strcpy(answer_cpy, answer_buffer);
+			sprintf(answer_buffer, "%s\n%s %dx%d+%d+%d", answer_cpy, v->name, v->frame->x, v->frame->y, v->frame->width, v->frame->height);
 		}
 	}
 	else if (tokens_len == 4 && !strcmp(parsed_command[0], "add"))

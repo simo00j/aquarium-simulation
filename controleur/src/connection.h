@@ -16,6 +16,7 @@ typedef struct connection
     view *associated_view;
     status status;
     int timeout;
+    int fish_update;
     pthread_t thread;
     STAILQ_ENTRY(connection)
     next;

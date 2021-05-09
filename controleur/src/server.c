@@ -36,11 +36,11 @@ void *server__interface(void *args)
 
 void *update_randomly(void *args)
 {
-    (void)args;
+    (void) args;
     while (controller->status == CONNECTED)
     {
         aquarium__update_fish_randomly(controller->aquarium);
-        sleep(5);
+        sleep(controller->fish_update_interval);
     }
     pthread_exit(NULL);
 }
@@ -79,6 +79,7 @@ int server__launch(server *server)
         exit_if(conn->socket_fd < 0, "error on accept()");
         conn->timeout = server->timeout;
         conn->status = CONNECTED;
+        conn->fish_update = server->fish_update_interval;
         STAILQ_INSERT_HEAD(&(controller->connections_list), conn, next);
         pthread_create(&(conn->thread), NULL, connection__start, conn);
     }
