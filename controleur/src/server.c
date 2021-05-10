@@ -40,7 +40,7 @@ void *update_randomly(void *args)
     while (controller->status == CONNECTED)
     {
         aquarium__update_fish_randomly(controller->aquarium);
-        sleep(controller->fish_update_interval);
+        sleep(controller->fish_update_interval); //peut etre une autre valeur
     }
     pthread_exit(NULL);
 }

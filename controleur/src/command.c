@@ -42,7 +42,7 @@ void command__from_client(connection *c, aquarium *aq)
             {
 				strcpy(answer_cpy, c->answer_buffer);
                 frame *relative_frame = frame__get_relative(f->frame, c->associated_view->frame);
-                sprintf(c->answer_buffer, "%s [%s at %dx%d,%dx%d,%d]", answer_cpy, f->name, relative_frame->x, relative_frame->y,relative_frame->width, relative_frame->height, 5);
+                sprintf(c->answer_buffer, "%s [%s at %dx%d,%dx%d,%d]", answer_cpy, f->name, relative_frame->x, relative_frame->y,relative_frame->width, relative_frame->height, c->fish_update);
                 free(relative_frame);
             }
         }
@@ -187,26 +187,29 @@ void *connection__get_fish_continuously(void *conn)
 		sprintf(c->answer_buffer, "list ");
 		STAILQ_FOREACH(f, &(controller->aquarium->fish_list), next)
 		{
+			/*
             DEBUG_OUT("connection__get_fish_continuously : viewer frame : %s\n", frame__to_str(c->associated_view->frame));
             DEBUG_OUT("connection__get_fish_continuously : fish frame : %s\n", frame__to_str(f->frame));
             DEBUG_OUT("connection__get_fish_continuously : testing inclusion\n");
+			*/
 			if (frame__includes_snippet(c->associated_view->frame, f->frame))
 			{
-                DEBUG_OUT("connection__get_fish_continuously : test succes\n");
+                //DEBUG_OUT("connection__get_fish_continuously : test succes\n");
 			    frame *relative_frame = frame__get_relative(f->frame, c->associated_view->frame);
-                DEBUG_OUT("connection__get_fish_continuously : got relative frame\n");
+                //DEBUG_OUT("connection__get_fish_continuously : got relative frame\n");
 				strcpy(answer_cpy, c->answer_buffer);
                 if (f->is_started == 1) {
-                    sprintf(c->answer_buffer, "%s [%s at %dx%d,%dx%d,%d]", answer_cpy, f->name, relative_frame->x, relative_frame->y,relative_frame->width, relative_frame->height, 5);
+                    sprintf(c->answer_buffer, "%s [%s at %dx%d,%dx%d,%d]", answer_cpy, f->name, relative_frame->x, relative_frame->y,relative_frame->width, relative_frame->height, c->fish_update);
                 } else {
                     sprintf(c->answer_buffer, "%s [%s at %dx%d,%dx%d,%d]", answer_cpy, f->name, relative_frame->x, relative_frame->y,relative_frame->width, relative_frame->height, 0);
                 }
-                DEBUG_OUT("connection__get_fish_continuously : wrote to buffer\n");
+                //DEBUG_OUT("connection__get_fish_continuously : wrote to buffer\n");
 				free(relative_frame);
 			}
 		}
 		strcpy(answer_cpy, c->answer_buffer);
 		sprintf(c->answer_buffer, "%s\n", answer_cpy);
+		DEBUG_OUT("socket %d -> %s\n", c->socket_fd, c->answer_buffer);
 		write(c->socket_fd, c->answer_buffer, strlen(c->answer_buffer));
 		sleep(c->fish_update);
 	}
