@@ -14,13 +14,14 @@ public class Parser {
         String regex = "\\[(?<name>[a-zA-Z]+) at (?<positionX>\\d+)x(?<positionY>\\d+),(?<fishWidth>\\d+)x(?<fishHeight>\\d+),(?<duration>\\d+)]";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(str.replace("list ", ""));
+        String name;
         while (matcher.find()) {
-            String name = matcher.group("name");
+            name = matcher.group("name");
             int fish_width = Integer.parseInt(matcher.group("fishWidth")) * Integer.parseInt(Config.properties.getProperty("viewer-width")) / 100;
             int fish_height = Integer.parseInt(matcher.group("fishHeight")) * Integer.parseInt(Config.properties.getProperty("viewer-height")) / 100;
             int duration = Integer.parseInt(matcher.group("duration"));
             Point position = new Point(Integer.parseInt(matcher.group("positionX")) * Integer.parseInt(Config.properties.getProperty("viewer-width")) / 100, Integer.parseInt(matcher.group("positionY")) * Integer.parseInt(Config.properties.getProperty("viewer-height")) / 100);
-            Fish fish = new Fish(name, fish_width, fish_height, position, position, duration);
+            Fish fish = new Fish(name, fish_width, fish_height, position, duration);
             connection.addFish(fish);
         }
     }
@@ -29,14 +30,20 @@ public class Parser {
         String regex = "\\[(?<name>[a-zA-Z_0-9]+) at (?<destinationX>\\d+)x(?<destinationY>\\d+),(?<fishWidth>\\d+)x(?<fishHeight>\\d+),(?<duration>\\d+)]";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(str.replace("list ", ""));
+        String name;
         while (matcher.find()) {
-            String name = matcher.group("name");
+            name = matcher.group("name");
             int fish_width = Integer.parseInt(matcher.group("fishWidth"))  * Integer.parseInt(Config.properties.getProperty("viewer-width")) / 100;
             int fish_height = Integer.parseInt(matcher.group("fishHeight")) * Integer.parseInt(Config.properties.getProperty("viewer-height")) / 100;
             Point destination = new Point(Integer.parseInt(matcher.group("destinationX")) * Integer.parseInt(Config.properties.getProperty("viewer-width")) / 100, Integer.parseInt(matcher.group("destinationY")) * Integer.parseInt(Config.properties.getProperty("viewer-height")) / 100);
             int duration = Integer.parseInt(matcher.group("duration"));
-            Fish fish = new Fish(name, fish_width, fish_height, null, destination, duration);
-            connection.updateFish(fish);
+            Fish oldFish = connection.findFish(name);
+            Fish fish = new Fish(name, fish_width, fish_height, destination, duration);
+            if (oldFish == null){
+                connection.addFish(fish);
+            }else{
+                connection.updateFish(oldFish, fish);
+            }
         }
     }
 
@@ -54,7 +61,7 @@ public class Parser {
             int fish_width = Integer.parseInt(matcher.group("fishWidth"))  * Integer.parseInt(Config.properties.getProperty("viewer-width")) / 100;
             int fish_height = Integer.parseInt(matcher.group("fishHeight"))  * Integer.parseInt(Config.properties.getProperty("viewer-height")) / 100;
             Point position = new Point(Integer.parseInt(matcher.group("positionX"))  * Integer.parseInt(Config.properties.getProperty("viewer-width")) / 100, Integer.parseInt(matcher.group("positionY"))  * Integer.parseInt(Config.properties.getProperty("viewer-height")) / 100);
-            Fish fish = new Fish(name, fish_width, fish_height, position, position, 0);
+            Fish fish = new Fish(name, fish_width, fish_height, position, 0);
             connection.addFish(fish);
         }
 

@@ -5,6 +5,11 @@
 
 #define MAX_STR_FRAME_SIZE 30
 
+/**
+ * creates a frame from a string of form XxY+W+H
+ * @param string : a string of form  XxY+W+H
+ * @return a pointer to a frame, must be deallocated
+ */
 frame *frame__from_str(const char *string)
 {
     frame *f = malloc(sizeof(frame));
@@ -12,6 +17,11 @@ frame *frame__from_str(const char *string)
     return f;
 }
 
+/**
+ * transforms a frame into a string of form XxY,WxH
+ * @param frame : a pointer to a frame
+ * @return a pointer to a string of form XxY,WxH, must be deallocated
+ */
 char *frame__to_str(const frame *frame)
 {
     char *str = malloc(sizeof(MAX_STR_FRAME_SIZE));
@@ -19,6 +29,12 @@ char *frame__to_str(const frame *frame)
     return str;
 }
 
+/**
+ * checks if a frame 'viewer' contains another frame 'snippet'
+ * @param viewer : a frame representing the viewer or aquarium
+ * @param snippet : a frame representing a fish
+ * @return 1 if viewer contains snippet and 0 if not
+ */
 int frame__includes_snippet(const frame *viewer, const frame *snippet)
 {
     return snippet->x + snippet->width >= viewer->x && snippet->y + snippet->height >= viewer->y && snippet->x  <= viewer->x + viewer->width && snippet->y  <= viewer->y + viewer->height;

@@ -15,7 +15,6 @@ aquarium *aquarium__empty()
     v->name = malloc(sizeof(char) * VIEW_NAME_MAX_SIZE);
     sscanf("NPA", "%s", v->name);
     STAILQ_INSERT_HEAD(&(aq->views_list), v, next);
-
     return aq;
 }
 

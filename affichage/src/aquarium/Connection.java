@@ -20,18 +20,20 @@ import java.util.stream.Collectors;
 public class Connection {
     public Viewer viewer;
     public Client client;
-    public ArrayList<Fish> fishList = new ArrayList<>();
+    public ArrayList<Fish> fishList;
     public BufferedReader stdIn;
     public Prompt prompt;
     public LinkedList<String> commandsList;
-    public final Logger logger = Logger.getLogger(Connection.class.getName());
+    public final Logger logger;
 
     public Connection(Stage primaryStage) {
         this.commandsList = new LinkedList<>();
         this.client = new Client();
         this.stdIn = new BufferedReader(new InputStreamReader(System.in));
+        this.fishList = new ArrayList<>();
         this.viewer = new Viewer(primaryStage);
         this.prompt = new Prompt(this);
+        this.logger = Logger.getLogger(Connection.class.getName());
 
         Thread ServerIncomingThread = new Thread(new ParseServerIncoming(this));
         ServerIncomingThread.setDaemon(true);
@@ -56,33 +58,19 @@ public class Connection {
         });
     }
 
-    public void updateFish(Fish fish) {
-        List<Fish> oldFishList = this.fishList.stream().filter(f -> f.getName().equals(fish.getName())).collect(Collectors.toList());
-        Fish oldFish;
-        if (oldFishList.size() > 0) {
-            oldFish = oldFishList.get(0);
-            oldFish.getPathTransition().stop();
-            oldFish.updateFish(fish);
-            this.startFish(oldFish);
-        }
-        else {
-            this.addFish(fish);
-            this.startFish(fish);
-        }
+    public void updateFish(Fish oldFish, Fish fish) {
+        logger.info("DEBUG : updating fish named : " + fish.getName());
+        this.fishList.set(fishList.indexOf(oldFish), fish);
+        this.startFish(fish);
+    }
+
+    public Fish findFish(String name){
+        return this.fishList.stream().filter(f -> f.getName().equals(name)).findFirst().orElse(null);
     }
 
     public void addFish(Fish fish) {
         this.fishList.add(fish);
         Platform.runLater(() -> this.viewer.pane.getChildren().add(fish.getImageView()));
-    }
-
-    public void startFish(String name){
-        for (Fish f : fishList){
-            if (f.getName().equals(name)) {
-                this.startFish(f);
-                break;
-            }
-        }
     }
 
     public void startFish(Fish fish){

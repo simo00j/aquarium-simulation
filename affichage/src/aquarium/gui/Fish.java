@@ -18,7 +18,7 @@ public class Fish {
     final private PathTransition pathTransition;
     String name;
 
-    public Fish(String name, int fish_width, int fish_height, Point position, Point destination, int duration){
+    public Fish(String name, int fish_width, int fish_height, Point destination, int duration){
         this.name = name;
         this.duration = Duration.millis(duration * 1000);
         this.destination = destination;
@@ -29,12 +29,6 @@ public class Fish {
         this.iv.setFitWidth(fish_width);
         this.iv.setFitHeight(fish_height);
         Path path = new Path();
-        if (position != null){
-            this.iv.setX(position.getX());
-            this.iv.setY(position.getY());
-            path.getElements().add(new MoveTo(position.getX(), position.getY()));
-            path.getElements().add(new LineTo(destination.getX(), destination.getY()));
-        }
         this.pathTransition = new PathTransition();
         this.pathTransition.setDuration(this.duration);
         this.pathTransition.setPath(path);
@@ -46,12 +40,11 @@ public class Fish {
         return this.iv;
     }
 
-    public PathTransition getPathTransition() {
-        return pathTransition;
-    }
-
     public void move(){
         this.pathTransition.play();
+    }
+    public void stop(){
+        this.pathTransition.stop();
     }
 
     public String getName() {

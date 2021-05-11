@@ -26,7 +26,7 @@ public class Prompt {
         this.stage = new Stage();
         this.stage.setTitle("Client prompt");
         this.stage.setOnCloseRequest(e -> {
-            connection.endConnection();
+            this.connection.endConnection();
             Platform.exit();
             System.exit(0);
         });
@@ -36,15 +36,15 @@ public class Prompt {
         this.response = new TextArea();
         this.response.setPrefRowCount(10);
         this.response.setEditable(false);
-        this.response.setStyle("-fx-text-box-border: #00ff00; -fx-focus-color: #00ff00; -fx-control-inner-background: #2d2d2d; -fx-font-family: Consolas; -fx-highlight-fill: #00ff00; -fx-highlight-text-fill: #00ff00; -fx-text-fill: #00ff00; ");
+        this.response.setStyle("-fx-text-box-border: #00ff00; -fx-focus-color: #00ff00; -fx-control-inner-background: #2d2d2d; -fx-font-family: Consolas; -fx-highlight-fill: #00ff00; -fx-highlight-text-fill: #2d2d2dff; -fx-text-fill: #00ff00; ");
         Button exampleButton = new Button("Run example");
-        exampleButton.setStyle("-fx-background-color: dodgerBlue; -fx-text-fill: white;");
+        exampleButton.setStyle("-fx-background-color: #204d7b; -fx-text-fill: white;");
         exampleButton.setOnAction(actionEvent -> {
             try {
                 File commandsExample = new File("resources/data/example.cmds");
                 Scanner reader = new Scanner(commandsExample);
                 while (reader.hasNextLine()) {
-                    connection.sendCommand(reader.nextLine());
+                    this.connection.sendCommand(reader.nextLine());
                     Thread.sleep(100);
                 }
                 reader.close();
@@ -57,15 +57,15 @@ public class Prompt {
         });
 
         Button logoutButton = new Button("log out");
-        logoutButton.setStyle("-fx-background-color: red; -fx-text-fill: white;");
+        logoutButton.setStyle("-fx-background-color: #842f2f; -fx-text-fill: white;");
         logoutButton.setOnAction(actionEvent -> {
-            connection.sendCommand("log out");
+            this.connection.sendCommand("log out");
         });
 
         Button statusButton = new Button("status");
-        statusButton.setStyle("-fx-background-color: green; -fx-text-fill: white;");
+        statusButton.setStyle("-fx-background-color: rgba(5,88,5,0.87); -fx-text-fill: white;");
         statusButton.setOnAction(actionEvent -> {
-            connection.sendCommand("status");
+            this.connection.sendCommand("status");
         });
 
         GridPane buttons = new GridPane();
@@ -80,13 +80,13 @@ public class Prompt {
         this.response.setScrollTop(0);
         command.setOnKeyPressed( event -> {
             if( event.getCode() == KeyCode.ENTER ) {
-                connection.commandsList.addLast(command.getText());
-                connection.sendCommand(command.getText());
+                this.connection.commandsList.addLast(command.getText());
+                this.connection.sendCommand(command.getText());
                 addCommand(command.getText());
                 command.setText("");
             }
         });
-        stage.setScene(new Scene(box, 400, 250));
+        this.stage.setScene(new Scene(box, 400, 250));
     }
 
     public void addResponse(String str) {
