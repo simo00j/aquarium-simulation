@@ -67,14 +67,6 @@ public class Fish {
         path.getElements().add(new MoveTo(this.destination.getX() , this.destination.getY()));
         this.destination = fish.getDestination();
         this.duration = fish.getDuration();
-        CubicCurveTo cubicCurveTo = new CubicCurveTo();
-        cubicCurveTo.setControlX1(400.0f);
-        cubicCurveTo.setControlY1(40.0f);
-        cubicCurveTo.setControlX2(175.0f);
-        cubicCurveTo.setControlY2(250.0f);
-        cubicCurveTo.setX(this.destination.getX());
-        cubicCurveTo.setY(this.destination.getY());
-        path.getElements().add(cubicCurveTo);
         path.getElements().add(new LineTo(this.destination.getX(), this.destination.getY()));
         this.pathTransition.setPath(path);
         this.pathTransition.setDuration(this.duration);

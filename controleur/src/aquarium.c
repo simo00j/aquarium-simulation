@@ -8,6 +8,14 @@ aquarium *aquarium__empty()
     aq->frame = frame__from_str(AQUARIUM__DEFAULT_FRAME);
     STAILQ_INIT(&(aq->fish_list));
     STAILQ_INIT(&(aq->views_list));
+
+    ////// TMP ///////
+    view *v = malloc(sizeof(view));
+    v->frame = frame__from_str(AQUARIUM__DEFAULT_FRAME);
+    v->name = malloc(sizeof(char) * VIEW_NAME_MAX_SIZE);
+    sscanf("NPA", "%s", v->name);
+    STAILQ_INSERT_HEAD(&(aq->views_list), v, next);
+
     return aq;
 }
 
@@ -175,18 +183,6 @@ int aquarium__count_views(const aquarium *aq)
         i++;
     }
     return i ;
-}
-
-
-void aquarium__update_fish_randomly(const aquarium *aq){
-    fish *f;
-    STAILQ_FOREACH(f, &(aq->fish_list), next)
-    {
-        if (f->is_started)
-        {
-            frame__move_randomly_inside(f->frame, aq->frame);
-        }
-    }
 }
 
 void aquarium__free(aquarium *aquarium)

@@ -1,0 +1,129 @@
+DEBUG: entering aquarium__load
+DEBUG: quitting aquarium__load
+DEBUG: socket 4 -> list 
+
+DEBUG: socket 4 -> list 
+
+DEBUG: adding fish Spongebob with frame 50x10,10x10
+DEBUG: entering aquarium__add_fish
+DEBUG: aquarium__add_fish : adding fish
+DEBUG: quitting aquarium__add_fish after adding Spongebob
+DEBUG: socket 4 -> list  [Spongebob at 50x10,10x10,0]
+
+DEBUG: socket 4 -> list  [Spongebob at 205x991,10x10,5]
+
+DEBUG: socket 5 -> list  [Spongebob at -295x491,10x10,5]
+
+DEBUG: socket 4 -> list  [Spongebob at 11x958,10x10,5]
+
+DEBUG: socket 6 -> list  [Spongebob at 11x458,10x10,5]
+
+DEBUG: socket 5 -> list  [Spongebob at -489x458,10x10,5]
+
+DEBUG: socket 4 -> list  [Spongebob at 745x600,10x10,5]
+
+DEBUG: socket 6 -> list  [Spongebob at 745x100,10x10,5]
+
+DEBUG: socket 5 -> list  [Spongebob at 245x100,10x10,5]
+
+DEBUG: socket 4 -> list  [Spongebob at 940x714,10x10,5]
+
+DEBUG: socket 6 -> list  [Spongebob at 940x214,10x10,5]
+
+DEBUG: socket 5 -> list  [Spongebob at 440x214,10x10,5]
+
+DEBUG: socket 4 -> list  [Spongebob at 683x753,10x10,5]
+
+DEBUG: socket 6 -> list  [Spongebob at 683x253,10x10,5]
+
+DEBUG: socket 5 -> list  [Spongebob at 183x253,10x10,5]
+
+DEBUG: socket 4 -> list  [Spongebob at 681x777,10x10,5]
+
+DEBUG: socket 6 -> list  [Spongebob at 681x277,10x10,5]
+
+DEBUG: socket 5 -> list  [Spongebob at 181x277,10x10,5]
+
+DEBUG: socket 4 -> list  [Spongebob at 465x837,10x10,5]
+
+DEBUG: socket 6 -> list  [Spongebob at 465x337,10x10,5]
+
+DEBUG: socket 5 -> list  [Spongebob at -35x337,10x10,5]
+
+DEBUG: socket 4 -> list  [Spongebob at 13x649,10x10,5]
+
+DEBUG: socket 6 -> list  [Spongebob at 13x149,10x10,5]
+
+DEBUG: socket 5 -> list  [Spongebob at -487x149,10x10,5]
+
+DEBUG: socket 4 -> list  [Spongebob at 761x960,10x10,5]
+
+DEBUG: socket 6 -> list  [Spongebob at 761x460,10x10,5]
+
+DEBUG: socket 5 -> list  [Spongebob at 261x460,10x10,5]
+
+DEBUG: socket 4 -> list  [Spongebob at 936x637,10x10,5]
+
+DEBUG: socket 6 -> list  [Spongebob at 936x137,10x10,5]
+
+DEBUG: socket 5 -> list  [Spongebob at 436x137,10x10,5]
+
+DEBUG: socket 4 -> list  [Spongebob at 726x483,10x10,5]
+
+DEBUG: socket 6 -> list  [Spongebob at 726x-17,10x10,5]
+
+DEBUG: socket 5 -> list  [Spongebob at 226x-17,10x10,5]
+
+DEBUG: socket 4 -> list  [Spongebob at 911x172,10x10,5]
+
+DEBUG: socket 6 -> list  [Spongebob at 911x-328,10x10,5]
+
+DEBUG: socket 5 -> list  [Spongebob at 411x-328,10x10,5]
+
+DEBUG: socket 4 -> list  [Spongebob at 192x212,10x10,5]
+
+DEBUG: socket 6 -> list  [Spongebob at 192x-288,10x10,5]
+
+DEBUG: socket 5 -> list  [Spongebob at -308x-288,10x10,5]
+
+DEBUG: socket 4 -> list  [Spongebob at 727x175,10x10,5]
+
+DEBUG: socket 6 -> list  [Spongebob at 727x-325,10x10,5]
+
+DEBUG: socket 5 -> list  [Spongebob at 227x-325,10x10,5]
+
+DEBUG: socket 4 -> list  [Spongebob at 460x740,10x10,5]
+
+DEBUG: socket 6 -> list  [Spongebob at 460x240,10x10,5]
+
+DEBUG: socket 5 -> list  [Spongebob at -40x240,10x10,5]
+
+DEBUG: socket 4 -> list  [Spongebob at 761x284,10x10,5]
+
+DEBUG: socket 6 -> list  [Spongebob at 761x-216,10x10,5]
+
+DEBUG: socket 5 -> list  [Spongebob at 261x-216,10x10,5]
+
+DEBUG: socket 4 -> list  [Spongebob at 337x956,10x10,5]
+
+DEBUG: socket 6 -> list  [Spongebob at 337x456,10x10,5]
+
+DEBUG: socket 5 -> list  [Spongebob at -163x456,10x10,5]
+
+DEBUG: socket 4 -> list  [Spongebob at 348x391,10x10,5]
+
+DEBUG: socket 6 -> list  [Spongebob at 348x-109,10x10,5]
+
+DEBUG: socket 5 -> list  [Spongebob at -152x-109,10x10,5]
+
+DEBUG: socket 4 -> list  [Spongebob at 650x811,10x10,5]
+
+DEBUG: socket 6 -> list  [Spongebob at 650x311,10x10,5]
+
+DEBUG: socket 5 -> list  [Spongebob at 150x311,10x10,5]
+
+DEBUG: socket 4 -> list  [Spongebob at 857x93,10x10,5]
+
+DEBUG: socket 6 -> list  [Spongebob at 857x-407,10x10,5]
+
+error on read(): Connection reset by peer

@@ -34,24 +34,13 @@ void *server__interface(void *args)
     return (void *)0;
 }
 
-void *update_randomly(void *args)
-{
-    (void)args;
-    while (controller->status == CONNECTED)
-    {
-        aquarium__update_fish_randomly(controller->aquarium);
-        sleep(5);
-    }
-    pthread_exit(NULL);
-}
-
 int server__launch(server *server)
 {
     int socket_fd, clilen;
     char buffer[BUFFER_MAX_SIZE];
     struct sockaddr_in serv_addr, cli_addr;
     connection *conn;
-    pthread_t thread_server, thread_update;
+    pthread_t thread_server;
     controller->aquarium = aquarium__empty();
     STAILQ_INIT(&(controller->connections_list));
     socket_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -70,7 +59,6 @@ int server__launch(server *server)
 
     server->status = CONNECTED;
     pthread_create(&thread_server, NULL, server__interface, NULL);
-    pthread_create(&thread_update, NULL, update_randomly, NULL);
     while (server->status == CONNECTED)
     {
         conn = malloc(sizeof(connection));
@@ -83,7 +71,6 @@ int server__launch(server *server)
         pthread_create(&(conn->thread), NULL, connection__start, conn);
     }
     pthread_join(thread_server, NULL);
-    pthread_join(thread_update, NULL);
     aquarium__free(server->aquarium);
     return 0;
 }

@@ -106,11 +106,31 @@ void command__from_client(connection *c, aquarium *aq)
 			if (frame__includes_snippet(c->associated_view->frame, f->frame))
 			{
 			    frame *relative_frame = frame__get_relative(f->frame, c->associated_view->frame);
-				sprintf(c->answer_buffer, "%s\n\tFish %s at %dx%d,%dx%d %s\n", c->answer_buffer, f->name, relative_frame->x, relative_frame->y, relative_frame->width, relative_frame->height, f->is_started ? "started" : "notStarted");
+				sprintf(c->answer_buffer, "%s\n\tFish %s at %s %s\n", c->answer_buffer, f->name, frame__to_str(relative_frame), f->is_started ? "started" : "notStarted");
+                free(relative_frame);
 			}
 		}
         sprintf(c->answer_buffer, "%s\n", c->answer_buffer);
 	}
+    else if (tokens_len == 1 && !strcmp(parsed_command[0], "ls"))
+    {
+        fish *f;
+        sprintf(c->answer_buffer, "list ");
+        STAILQ_FOREACH(f, &(controller->aquarium->fish_list), next)
+        {
+            if (f->is_started && f->position < FISH_PATH_SIZE - 1 && (frame__includes_snippet(c->associated_view->frame, f->path[f->position]) || frame__includes_snippet(c->associated_view->frame, f->path[f->position + 1]))) {
+                frame *relative_frame = frame__get_relative(f->path[f->position], c->associated_view->frame);
+                sprintf(c->answer_buffer, "%s [%s at %s,%d]", c->answer_buffer, f->name, frame__to_str(relative_frame), 5);
+                free(relative_frame);
+                f->position++;
+            } else if (!f->is_started && frame__includes_snippet(c->associated_view->frame, f->frame)) {
+                frame *relative_frame = frame__get_relative(f->frame, c->associated_view->frame);
+                sprintf(c->answer_buffer, "%s [%s at %s,%d]", c->answer_buffer, f->name, frame__to_str(relative_frame), 0);
+                free(relative_frame);
+            }
+        }
+        sprintf(c->answer_buffer, "%s\n", c->answer_buffer);
+    }
 	else if (tokens_len == 1 && !strcmp(parsed_command[0], "getFishesContinuously"))
 	{
 		pthread_t t;
@@ -152,7 +172,8 @@ void command__from_client(connection *c, aquarium *aq)
 		fish *f = aquarium__get_fish(aq, parsed_command[1]);
 		if (f && f->is_started == 0)
 		{
-			f->is_started = 1;
+            fish__create_path(f, controller->aquarium->frame);
+            f->is_started = 1;
 			sprintf(c->answer_buffer, "OK\n");
 		}
 		else
@@ -180,22 +201,16 @@ void *connection__get_fish_continuously(void *conn)
 		sprintf(c->answer_buffer, "list ");
 		STAILQ_FOREACH(f, &(controller->aquarium->fish_list), next)
 		{
-            DEBUG_OUT("connection__get_fish_continuously : viewer frame : %s\n", frame__to_str(c->associated_view->frame));
-            DEBUG_OUT("connection__get_fish_continuously : fish frame : %s\n", frame__to_str(f->frame));
-            DEBUG_OUT("connection__get_fish_continuously : testing inclusion\n");
-			if (frame__includes_snippet(c->associated_view->frame, f->frame))
-			{
-                DEBUG_OUT("connection__get_fish_continuously : test succes\n");
-			    frame *relative_frame = frame__get_relative(f->frame, c->associated_view->frame);
-                DEBUG_OUT("connection__get_fish_continuously : got relative frame\n");
-                if (f->is_started == 1) {
-                    sprintf(c->answer_buffer, "%s [%s at %dx%d,%dx%d,%d]", c->answer_buffer, f->name, relative_frame->x, relative_frame->y,relative_frame->width, relative_frame->height, 5);
-                } else {
-                    sprintf(c->answer_buffer, "%s [%s at %dx%d,%dx%d,%d]", c->answer_buffer, f->name, relative_frame->x, relative_frame->y,relative_frame->width, relative_frame->height, 0);
-                }
-                DEBUG_OUT("connection__get_fish_continuously : wrote to buffer\n");
-				free(relative_frame);
-			}
+            if (f->is_started && f->position < FISH_PATH_SIZE - 1 && (frame__includes_snippet(c->associated_view->frame, f->path[f->position]) || frame__includes_snippet(c->associated_view->frame, f->path[f->position + 1]))) {
+                frame *relative_frame = frame__get_relative(f->path[f->position], c->associated_view->frame);
+                sprintf(c->answer_buffer, "%s [%s at %s,%d]", c->answer_buffer, f->name, frame__to_str(relative_frame), 5);
+                free(relative_frame);
+                f->position++;
+            } else if (!f->is_started && frame__includes_snippet(c->associated_view->frame, f->frame)) {
+                frame *relative_frame = frame__get_relative(f->frame, c->associated_view->frame);
+                sprintf(c->answer_buffer, "%s [%s at %s,%d]", c->answer_buffer, f->name, frame__to_str(relative_frame), 0);
+                free(relative_frame);
+            }
 		}
 		sprintf(c->answer_buffer, "%s\n", c->answer_buffer);
 		write(c->socket_fd, c->answer_buffer, strlen(c->answer_buffer));

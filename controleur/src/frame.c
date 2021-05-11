@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "frame.h"
+#include "debug.h"
 
 #define MAX_STR_FRAME_SIZE 30
 
@@ -20,14 +21,13 @@ char *frame__to_str(const frame *frame)
 
 int frame__includes_snippet(const frame *viewer, const frame *snippet)
 {
-    return snippet->x >= viewer->x && snippet->y >= viewer->y &&
-           snippet->x + snippet->height <= viewer->x + viewer->height &&
-           snippet->y + snippet->width <= viewer->y + viewer->width;
+    return snippet->x + snippet->width >= viewer->x && snippet->y + snippet->height >= viewer->y && snippet->x  <= viewer->x + viewer->width && snippet->y  <= viewer->y + viewer->height;
 }
 
 void frame__move_randomly_inside(frame *snippet, const frame *viewer){
-    snippet->x = rand() % viewer->width;
-    snippet->y = rand() % viewer->height;
+    snippet->x = (snippet->x + 10) % viewer->width;
+    DEBUG_OUT("generated position is : %s", frame__to_str(snippet));
+    //snippet->y = rand() % viewer->height;
 }
 
 frame *frame__get_absolute(const frame *snippet, const frame *viewer)

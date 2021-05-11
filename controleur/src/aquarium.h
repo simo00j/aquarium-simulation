@@ -31,7 +31,6 @@ view *aquarium__get_free_view(const aquarium *aq);
 view *aquarium__get_view(const aquarium *aq, const char *name);
 fish *aquarium__get_fish(const aquarium *aq, const char *name);
 int aquarium__count_fish_in_view(const aquarium *aq, const view *v);
-void aquarium__update_fish_randomly(const aquarium *aq);
 void aquarium__free(aquarium *aq);
 
 #endif //AQUARIUM_H
