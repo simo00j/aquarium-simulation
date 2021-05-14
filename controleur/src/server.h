@@ -15,6 +15,7 @@ typedef struct server {
 }server;
 
 int server__launch(server *server);
+void *server__update(void *args);
 void *server__interface(void *args);
 
 #endif //SERVER_H

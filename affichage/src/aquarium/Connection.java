@@ -8,6 +8,9 @@ import aquarium.gui.Viewer;
 import aquarium.parse.ParseServerIncoming;
 import javafx.application.Platform;
 import javafx.stage.Stage;
+import javafx.util.Duration;
+
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -54,14 +57,15 @@ public class Connection {
         Platform.runLater(() -> {
             this.viewer.stage.setTitle(Config.properties.getProperty("id"));
             this.viewer.stage.show();
+            this.prompt.stage.setTitle(Config.properties.getProperty("Client prompt id"));
             this.prompt.stage.show();
         });
     }
 
-    public void updateFish(Fish oldFish, Fish fish) {
-        logger.info("DEBUG : updating fish named : " + fish.getName());
-        this.fishList.set(fishList.indexOf(oldFish), fish);
-        this.startFish(fish);
+    public void updateFish(Fish fish, Point destination, int duration) {
+        fish.updateFish(destination, duration);
+        fish.stop();
+        fish.move();
     }
 
     public Fish findFish(String name){
@@ -71,10 +75,6 @@ public class Connection {
     public void addFish(Fish fish) {
         this.fishList.add(fish);
         Platform.runLater(() -> this.viewer.pane.getChildren().add(fish.getImageView()));
-    }
-
-    public void startFish(Fish fish){
-        Platform.runLater(fish::move);
     }
 
     public void delFish(String name){

@@ -38,11 +38,11 @@ public class Parser {
             Point destination = new Point(Integer.parseInt(matcher.group("destinationX")) * Integer.parseInt(Config.properties.getProperty("viewer-width")) / 100, Integer.parseInt(matcher.group("destinationY")) * Integer.parseInt(Config.properties.getProperty("viewer-height")) / 100);
             int duration = Integer.parseInt(matcher.group("duration"));
             Fish oldFish = connection.findFish(name);
-            Fish fish = new Fish(name, fish_width, fish_height, destination, duration);
             if (oldFish == null){
-                connection.addFish(fish);
+                connection.addFish(new Fish(name, fish_width, fish_height, destination, duration));
             }else{
-                connection.updateFish(oldFish, fish);
+                Point position = new Point((int) oldFish.getDestination().getX(), (int)oldFish.getDestination().getY());
+                connection.updateFish(oldFish, destination, duration);
             }
         }
     }

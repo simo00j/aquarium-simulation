@@ -35,15 +35,14 @@ public class ParseServerIncoming implements Runnable {
                     this.connection.sendCommand("getFishes");
                     this.connection.launch();
                 } else if (scanned.startsWith("\t->OK")) {
-                    this.connection.prompt.addResponse(scanned);
+                    this.connection.prompt.addResponse(scanned.replace("$", "\n"));
                 } else if (scanned.startsWith("OK")) {
-                    String command = this.connection.commandsList.getLast();
                     this.connection.prompt.addResponse(scanned);
+                    String command = this.connection.commandsList.getLast();
                     if (command.startsWith("addFish")) {
                         Parser.parseAddFish(command, this.connection);
                     } else if (command.startsWith("delFish")) {
                         this.connection.delFish(command.split(" ")[1]);
-                    } else if (command.startsWith("startFish")) {
                     }
                 } else if (scanned.startsWith("NOK")) {
                     this.connection.prompt.addResponse(scanned);

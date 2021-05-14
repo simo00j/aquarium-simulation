@@ -37,20 +37,24 @@ char *frame__to_str(const frame *frame)
  */
 int frame__includes_snippet(const frame *viewer, const frame *snippet)
 {
-    return snippet->x + snippet->width >= viewer->x && snippet->y + snippet->height >= viewer->y && snippet->x  <= viewer->x + viewer->width && snippet->y  <= viewer->y + viewer->height;
+    return snippet->x + snippet->width >= viewer->x &&
+           snippet->y + snippet->height >= viewer->y &&
+           snippet->x  <= viewer->x + viewer->width &&
+           snippet->y  <= viewer->y + viewer->height;
 }
 
 void frame__move_randomly_inside(frame *snippet, const frame *viewer){
-    snippet->x = (snippet->x + 10) % viewer->width;
-    DEBUG_OUT("generated position is : %s", frame__to_str(snippet));
-    //snippet->y = rand() % viewer->height;
+    (void)viewer;
+    snippet->x = snippet->x - 40;
+    //snippet->y = snippet->y + 5;
+    DEBUG_OUT("generated position is : %s\n", frame__to_str(snippet));
 }
 
 frame *frame__get_absolute(const frame *snippet, const frame *viewer)
 {
     frame *f = malloc(sizeof(frame));
-    f->x = snippet->x + viewer->x;
-    f->y = snippet->y + viewer->y;
+    f->x = snippet->x * viewer->width / 100 + viewer->x;
+    f->y = snippet->y * viewer->width / 100 + viewer->y;
     f->width = snippet->width * viewer->width / 100;
     f->height = snippet->height * viewer->height / 100;
     return f;
@@ -58,8 +62,8 @@ frame *frame__get_absolute(const frame *snippet, const frame *viewer)
 frame *frame__get_relative(const frame *snippet, const frame *viewer)
 {
     frame *f = malloc(sizeof(frame));
-    f->x = snippet->x - viewer->x;
-    f->y = snippet->y - viewer->y;
+    f->x = (snippet->x - viewer->x) * 100 / viewer->width;
+    f->y = (snippet->y - viewer->y) * 100 / viewer->width;
     f->width = snippet->width * 100 / viewer->width;
     f->height = snippet->height * 100 / viewer->height;
     return f;

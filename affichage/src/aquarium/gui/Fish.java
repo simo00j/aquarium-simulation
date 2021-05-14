@@ -1,13 +1,14 @@
 package aquarium.gui;
 
 import javafx.animation.*;
+import javafx.application.Platform;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.shape.CubicCurveTo;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
 import javafx.util.Duration;
+import javafx.scene.paint.Color;
 
 import java.awt.*;
 
@@ -25,15 +26,17 @@ public class Fish {
         this.iv = new ImageView();
         String ImagePath = "file:resources/images/" + name.split("_")[0] + ".png";
         this.iv.setImage(new Image(ImagePath));
-
         this.iv.setFitWidth(fish_width);
         this.iv.setFitHeight(fish_height);
+        this.iv.setX(destination.getX());
+        this.iv.setY(destination.getY());
         Path path = new Path();
         this.pathTransition = new PathTransition();
         this.pathTransition.setDuration(this.duration);
         this.pathTransition.setPath(path);
         this.pathTransition.setNode(this.iv);
         this.pathTransition.setOrientation(PathTransition.OrientationType.ORTHOGONAL_TO_TANGENT);
+        this.pathTransition.setInterpolator(Interpolator.LINEAR);
     }
 
     public ImageView getImageView() {
@@ -41,25 +44,26 @@ public class Fish {
     }
 
     public void move(){
-        this.pathTransition.play();
+        Platform.runLater(this.pathTransition::play);
     }
     public void stop(){
-        this.pathTransition.stop();
+        Platform.runLater(this.pathTransition::stop);
     }
 
     public String getName() {
         return this.name;
     }
 
-    public Duration getDuration() { return this.duration; }
-
     public Point getDestination() { return this.destination; }
 
-    public void updateFish(Fish fish) {
+    public void updateFish(Point destination, int duration) {
         Path path = new Path();
+        this.duration = Duration.millis(duration * 1000);
+        if (destination.getX() == this.destination.getX() && destination.getY() == this.destination.getY()){
+            this.duration = Duration.millis(0);
+        }
         path.getElements().add(new MoveTo(this.destination.getX() , this.destination.getY()));
-        this.destination = fish.getDestination();
-        this.duration = fish.getDuration();
+        this.destination = destination;
         path.getElements().add(new LineTo(this.destination.getX(), this.destination.getY()));
         this.pathTransition.setPath(path);
         this.pathTransition.setDuration(this.duration);

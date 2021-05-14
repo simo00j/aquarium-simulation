@@ -1,5 +1,6 @@
 package aquarium.gui;
 
+import aquarium.Config;
 import aquarium.Connection;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -24,7 +25,8 @@ public class Prompt {
     public Prompt(Connection connection) {
         this.connection = connection;
         this.stage = new Stage();
-        this.stage.setTitle("Client prompt");
+        this.stage.setX(600);
+        this.stage.setY(300);
         this.stage.setOnCloseRequest(e -> {
             this.connection.endConnection();
             Platform.exit();
@@ -45,7 +47,7 @@ public class Prompt {
                 Scanner reader = new Scanner(commandsExample);
                 while (reader.hasNextLine()) {
                     this.connection.sendCommand(reader.nextLine());
-                    Thread.sleep(100);
+                    Thread.sleep(500);
                 }
                 reader.close();
             } catch (FileNotFoundException e) {

@@ -16,11 +16,13 @@ fish *fish__create(char *name, frame *intial_frame)
 void fish__create_path(fish *f, frame *viewer)
 {
     f->path[0] = f->frame;
+    frame__move_randomly_inside(f->path[0], viewer);
     for (int i = 1; i < FISH_PATH_SIZE; ++i) {
         f->path[i] = malloc(sizeof(frame));
         f->path[i]->width = f->frame->width;
         f->path[i]->height = f->frame->height;
-        f->path[i]->y = f->frame->y;
+        f->path[i]->y = f->path[i-1]->y;
+        f->path[i]->x = f->path[i-1]->x;
         frame__move_randomly_inside(f->path[i], viewer);
     }
 }

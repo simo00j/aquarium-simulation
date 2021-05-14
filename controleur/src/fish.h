@@ -5,7 +5,7 @@
 #include "frame.h"
 
 #define FISH_NAME_MAX_SIZE 30
-#define FISH_PATH_SIZE 20
+#define FISH_PATH_SIZE 1000
 
 typedef struct fish
 {

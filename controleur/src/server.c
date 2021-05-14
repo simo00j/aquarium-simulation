@@ -34,13 +34,30 @@ void *server__interface(void *args)
     return (void *)0;
 }
 
+void *server__update(void *args)
+{
+    (void) args;
+    while (controller->status == CONNECTED)
+    {
+        fish *f;
+        STAILQ_FOREACH(f, &(controller->aquarium->fish_list), next)
+        {
+            if (f->is_started) {
+                f->position++;
+            }
+        }
+        sleep(controller->fish_update_interval);
+    }
+    pthread_exit(NULL);
+}
+
 int server__launch(server *server)
 {
     int socket_fd, clilen;
     char buffer[BUFFER_MAX_SIZE];
     struct sockaddr_in serv_addr, cli_addr;
     connection *conn;
-    pthread_t thread_server;
+    pthread_t thread_server, thread_update;
     controller->aquarium = aquarium__empty();
     STAILQ_INIT(&(controller->connections_list));
     socket_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -59,6 +76,7 @@ int server__launch(server *server)
 
     server->status = CONNECTED;
     pthread_create(&thread_server, NULL, server__interface, NULL);
+    pthread_create(&thread_update, NULL, server__update, NULL);
     while (server->status == CONNECTED)
     {
         conn = malloc(sizeof(connection));
