@@ -57,7 +57,7 @@ public class Connection {
         Platform.runLater(() -> {
             this.viewer.stage.setTitle(Config.properties.getProperty("id"));
             this.viewer.stage.show();
-            this.prompt.stage.setTitle(Config.properties.getProperty("Client prompt id"));
+            this.prompt.stage.setTitle("Client prompt " + Config.properties.getProperty("id"));
             this.prompt.stage.show();
         });
     }
@@ -78,13 +78,9 @@ public class Connection {
     }
 
     public void delFish(String name){
-        for (Fish f : fishList){
-            if (f.getName().equals(name)) {
-                this.fishList.remove(f);
-                Platform.runLater(() -> this.viewer.pane.getChildren().remove(f.getImageView()));
-                break;
-            }
-        }
+        Fish fish = findFish(name);
+        this.fishList.remove(fish);
+        Platform.runLater(() -> this.viewer.pane.getChildren().remove(fish.getImageView()));
     }
 
     public void sendCommand(String str) {

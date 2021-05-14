@@ -5,6 +5,6 @@ startFish PoissonRouge
 delFish PoissonRouge
 addFish PoissonRouge at 30x40, 10x10, RandomWayPoint
 startFish PoissonRouge
-addFish Spongebob at 50x10, 10x10, RandomWayPoint
+addFish Spongebob at 70x10, 10x10, RandomWayPoint
 startFish Spongebob
 delFish PoissonRouge

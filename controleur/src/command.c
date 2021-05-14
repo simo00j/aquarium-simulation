@@ -158,15 +158,22 @@ void command__from_client(connection *c, aquarium *aq)
 	}
 	else if (tokens_len == 2 && !strcmp(parsed_command[0], "delFish"))
 	{
-		int err = aquarium__del_fish(aq, parsed_command[1]);
-		if (err == -1)
-		{
-			sprintf(c->answer_buffer, "NOK\n");
-		}
-		else
-		{
-			sprintf(c->answer_buffer, "OK\n");
-		}
+        fish *f = aquarium__get_fish(aq, parsed_command[1]);
+        if (frame__includes_snippet(c->associated_view->frame, f->path[f->position])) {
+            int err = aquarium__del_fish(aq, parsed_command[1]);
+            if (err == -1)
+            {
+                sprintf(c->answer_buffer, "NOK\n");
+            }
+            else
+            {
+                sprintf(c->answer_buffer, "OK\n");
+            }
+        }
+        else
+        {
+            sprintf(c->answer_buffer, "NOK\n");
+        }
 	}
 	else if (tokens_len == 2 && !strcmp(parsed_command[0], "startFish"))
 	{
@@ -204,9 +211,9 @@ void *connection__get_fish_continuously(void *conn)
 		{
             DEBUG_OUT("f->position = %d\n", f->position);
             DEBUG_OUT("%s in %s ?\n", f->name, c->associated_view->name);
-            if (f->is_started && f->position < FISH_PATH_SIZE - 1 && (frame__includes_snippet(c->associated_view->frame, f->path[f->position]) || frame__includes_snippet(c->associated_view->frame, f->path[f->position + 1]))) {
+            if (f->is_started && f->position < FISH_PATH_SIZE - 1) { //  && (frame__includes_snippet(c->associated_view->frame, f->path[f->position]) || frame__includes_snippet(c->associated_view->frame, f->path[f->position + 1]))
                 frame *relative_frame = frame__get_relative(f->path[f->position], c->associated_view->frame);
-                sprintf(c->answer_buffer, "%s [%s at %s,%d]", c->answer_buffer, f->name, frame__to_str(relative_frame), 2);
+                sprintf(c->answer_buffer, "%s [%s at %s,%d]", c->answer_buffer, f->name, frame__to_str(relative_frame), controller->fish_update_interval);
                 free(relative_frame);
             } else if (!f->is_started && frame__includes_snippet(c->associated_view->frame, f->frame)) {
                 frame *relative_frame = frame__get_relative(f->frame, c->associated_view->frame);

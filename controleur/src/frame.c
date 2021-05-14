@@ -44,9 +44,8 @@ int frame__includes_snippet(const frame *viewer, const frame *snippet)
 }
 
 void frame__move_randomly_inside(frame *snippet, const frame *viewer){
-    (void)viewer;
-    snippet->x = snippet->x - 40;
-    //snippet->y = snippet->y + 5;
+    snippet->x = (snippet->x + rand() % (viewer->width / 20)) % viewer->width;
+    snippet->y = (snippet->y + rand() % (viewer->height / 20)) % viewer->height;
     DEBUG_OUT("generated position is : %s\n", frame__to_str(snippet));
 }
 
