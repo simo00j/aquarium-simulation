@@ -40,11 +40,11 @@ void *connection__start(void *c)
         bzero(conn->answer_buffer, BUFFER_MAX_SIZE);
 
         ssize_t err = read(conn->socket_fd, conn->command_buffer, BUFFER_MAX_SIZE - 1);
-        exit_if(err < 0, "error on read()");
+        EXIT_IF(err < 0, "error on read()");
         command__from_client(conn, controller->aquarium);
         signal(SIGPIPE, connection__end);
         err = write(conn->socket_fd, conn->answer_buffer, strlen(conn->answer_buffer));
-        exit_if(err < 0, "error on write()");
+        EXIT_IF(err < 0, "error on write()");
     }
     DEBUG_OUT("connection ended, proceeding to free\n");
     connection__free(conn);

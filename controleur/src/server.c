@@ -61,15 +61,15 @@ int server__launch(server *server)
     controller->aquarium = aquarium__empty();
     STAILQ_INIT(&(controller->connections_list));
     socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-    exit_if(socket_fd < 0, "error while creating socket");
-    exit_if(setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0, "setsockopt(SO_REUSEADDR) failed");
+    EXIT_IF(socket_fd < 0, "error while creating socket");
+    EXIT_IF(setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0, "setsockopt(SO_REUSEADDR) failed");
 
     bzero((char *)&serv_addr, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port = htons(server->port);
 
-    exit_if(bind(socket_fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0, "ERROR on bind()");
+    EXIT_IF(bind(socket_fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0, "ERROR on bind()");
 
     listen(socket_fd, 5);
     clilen = sizeof(cli_addr);
@@ -82,7 +82,7 @@ int server__launch(server *server)
         conn = malloc(sizeof(connection));
         conn->command_buffer = buffer;
         conn->socket_fd = accept(socket_fd, (struct sockaddr *)&cli_addr, (socklen_t *)&clilen);
-        exit_if(conn->socket_fd < 0, "error on accept()");
+        EXIT_IF(conn->socket_fd < 0, "error on accept()");
         conn->timeout = server->timeout;
         conn->status = CONNECTED;
         STAILQ_INSERT_HEAD(&(controller->connections_list), conn, next);

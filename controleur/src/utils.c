@@ -1,23 +1,7 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include "utils.h"
 
-void error(char *message)
-{
-    perror(message);
-    exit(1);
-}
-
-void exit_if(int cond, char *err)
-{
-    if (cond)
-    {
-        error(err);
-    }
-}
-
-void util__parser(char *parsed_message[], char *message, char *separator)
+void utils__parser(char *parsed_message[], char *message, char *separator)
 {
     message[strlen(message) - 1] = ' ';
     char *token = strtok(message, separator);
@@ -34,7 +18,7 @@ void util__parser(char *parsed_message[], char *message, char *separator)
     }
 }
 
-int util__count_tokens(char *message[])
+int utils__count_tokens(char *message[])
 {
     int i = 0;
     while (message[i] != NULL)

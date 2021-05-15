@@ -24,7 +24,7 @@ frame *frame__from_str(const char *string)
  */
 char *frame__to_str(const frame *frame)
 {
-    char *str = malloc(sizeof(MAX_STR_FRAME_SIZE));
+    char *str = malloc(sizeof(char) * MAX_STR_FRAME_SIZE);
     snprintf(str, MAX_STR_FRAME_SIZE, "%dx%d,%dx%d", frame->x, frame->y, frame->width, frame->height);
     return str;
 }
@@ -43,12 +43,23 @@ int frame__includes_snippet(const frame *viewer, const frame *snippet)
            snippet->y  <= viewer->y + viewer->height;
 }
 
+/**
+ * changes snippet x and y attributes randomly inside viewer
+ * @param snippet : frame representing the fish
+ * @param viewer : frame representing the aquarium
+ */
 void frame__move_randomly_inside(frame *snippet, const frame *viewer){
     snippet->x = (snippet->x + rand() % (viewer->width / 20)) % viewer->width;
     snippet->y = (snippet->y + rand() % (viewer->height / 20)) % viewer->height;
     DEBUG_OUT("generated position is : %s\n", frame__to_str(snippet));
 }
 
+/**
+ * converts a relative frame to an absolute frame
+ * @param snippet : frame representing the fish
+ * @param viewer : frame representing the viewer
+ * @return a pointer to an allocated absolute frame, needs to be freed
+ */
 frame *frame__get_absolute(const frame *snippet, const frame *viewer)
 {
     frame *f = malloc(sizeof(frame));
@@ -58,6 +69,13 @@ frame *frame__get_absolute(const frame *snippet, const frame *viewer)
     f->height = snippet->height * viewer->height / 100;
     return f;
 }
+
+/**
+ * converts an absolute frame to a relative frame
+ * @param snippet : frame representing the fish
+ * @param viewer : frame representing the viewer
+ * @return a pointer to an allocated relative frame, needs to be freed
+ */
 frame *frame__get_relative(const frame *snippet, const frame *viewer)
 {
     frame *f = malloc(sizeof(frame));

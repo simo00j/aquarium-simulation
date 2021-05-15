@@ -2,6 +2,12 @@
 #include <string.h>
 #include "fish.h"
 
+/**
+ * creates a fish with a given name and frame
+ * @param name : name of the fish
+ * @param frame : the frame related to the fish
+ * @return a pointer to an allocated fish structure, needs to be freed
+ */
 fish *fish__create(char *name, frame *intial_frame)
 {
     fish *f = malloc(sizeof(fish));
@@ -13,6 +19,10 @@ fish *fish__create(char *name, frame *intial_frame)
     return f;
 }
 
+/**
+ * frees an allocated fish structure
+ * @param fish : a pointer to the structre to free
+ */
 void fish__create_path(fish *f, frame *viewer)
 {
     f->path[0] = f->frame;
@@ -27,6 +37,11 @@ void fish__create_path(fish *f, frame *viewer)
     }
 }
 
+/**
+ * creates a path for the given fish by allocating a randomly filling a table of frames
+ * @param f : a pointer to the fish structure
+ * @param viewer : a frame representing the aquarium
+ */
 void fish__free(fish *fish)
 {
     free(fish->name);

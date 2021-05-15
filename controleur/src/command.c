@@ -17,8 +17,8 @@ void command__from_client(connection *c, aquarium *aq)
 	char *tmp_buffer = malloc(sizeof(char) * COMMAND__MAX_SIZE);
 	strcpy(tmp_buffer, c->command_buffer);
 	char *parsed_command[COMMAND__MAX_SIZE];
-	util__parser(parsed_command, c->command_buffer, " ");
-	int tokens_len = util__count_tokens(parsed_command);
+	utils__parser(parsed_command, c->command_buffer, " ");
+	int tokens_len = utils__count_tokens(parsed_command);
 
 	if (tokens_len == 2 && !strcmp(parsed_command[0], "ping"))
 	{
@@ -60,8 +60,7 @@ void command__from_client(connection *c, aquarium *aq)
                 sprintf(c->answer_buffer, "no greeting\n");
                 c->status = DISCONNECTED;
             }
-		}
-        else
+		} else
         {
             sprintf(c->answer_buffer, "no greeting\n");
             c->status = DISCONNECTED;
@@ -112,8 +111,7 @@ void command__from_client(connection *c, aquarium *aq)
 			}
 		}
         sprintf(c->answer_buffer, "%s\n", c->answer_buffer);
-	}
-    else if (tokens_len == 1 && !strcmp(parsed_command[0], "ls"))
+	} else if (tokens_len == 1 && !strcmp(parsed_command[0], "ls"))
     {
         fish *f;
         sprintf(c->answer_buffer, "list ");
@@ -211,7 +209,13 @@ void *connection__get_fish_continuously(void *conn)
 		{
             DEBUG_OUT("f->position = %d\n", f->position);
             DEBUG_OUT("%s in %s ?\n", f->name, c->associated_view->name);
-            if (f->is_started && f->position < FISH_PATH_SIZE - 1) { //  && (frame__includes_snippet(c->associated_view->frame, f->path[f->position]) || frame__includes_snippet(c->associated_view->frame, f->path[f->position + 1]))
+            if (f->is_started &&
+                f->position < FISH_PATH_SIZE - 1 &&
+                (frame__includes_snippet(c->associated_view->frame, f->path[f->position]) ||
+                 frame__includes_snippet(c->associated_view->frame, f->path[f->position + 1]) ||
+                 (f->position > 1 &&
+                 frame__includes_snippet(c->associated_view->frame, f->path[f->position - 1])
+                 ))) {
                 frame *relative_frame = frame__get_relative(f->path[f->position], c->associated_view->frame);
                 sprintf(c->answer_buffer, "%s [%s at %s,%d]", c->answer_buffer, f->name, frame__to_str(relative_frame), controller->fish_update_interval);
                 free(relative_frame);
@@ -231,11 +235,11 @@ void *connection__get_fish_continuously(void *conn)
 void command__from_server(char *command_buffer, char *answer_buffer, aquarium *aq)
 {
 	char *parsed_command[COMMAND__MAX_SIZE];
-	util__parser(parsed_command, command_buffer, " ");
-	int tokens_len = util__count_tokens(parsed_command);
+	utils__parser(parsed_command, command_buffer, " ");
+	int tokens_len = utils__count_tokens(parsed_command);
 
 	if (tokens_len == 2 && !strcmp(parsed_command[0], "load"))
-	{	
+	{
 		char * path = (char*) malloc(50);
 		strcpy(path, "data/");
 		strcat(path, parsed_command[1]);
@@ -247,7 +251,7 @@ void command__from_server(char *command_buffer, char *answer_buffer, aquarium *a
 			sprintf(answer_buffer,"\t-> Aquarium loaded ! ( %d display view)", aquarium__count_views(aq));
 			fclose(f);
 		}
-		else 
+		else
 		{
 			sprintf(answer_buffer,"\t->NOK");
 
@@ -263,7 +267,7 @@ void command__from_server(char *command_buffer, char *answer_buffer, aquarium *a
 			sprintf(answer_buffer, "%s\n%s %dx%d+%d+%d", answer_buffer, v->name, v->frame->x, v->frame->y, v->frame->width, v->frame->height);
 		}
 	}
-	else if (tokens_len == 4 && !strcmp(parsed_command[0], "add"))
+	else if (tokens_len == 4 && !strcmp(parsed_command[0], "add") && !strcmp(parsed_command[1], "view"))
 	{
 		frame *frame = frame__from_str(parsed_command[3]);
 		view *v = view__create(parsed_command[2], frame);
@@ -276,16 +280,16 @@ void command__from_server(char *command_buffer, char *answer_buffer, aquarium *a
 			sprintf(answer_buffer, "\t-> view added");
 		}
 	}
-	else if (tokens_len == 3 && !strcmp(parsed_command[0], "del"))
+	else if (tokens_len == 3 && !strcmp(parsed_command[0], "del") && !strcmp(parsed_command[1], "view"))
 	{
-		if(aquarium__del_view(aq, parsed_command[2])==-1)
+		if(aquarium__del_view(aq, parsed_command[2]) == -1)
 		{
 			sprintf(answer_buffer, "\t->NOK");
 		}
 		else
 		{
 			sprintf(answer_buffer,"\t-> view %s deleted", parsed_command[2]);
-		}	
+		}
 	}
 	else if (tokens_len == 2 && !strcmp(parsed_command[0], "save"))
 	{
