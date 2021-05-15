@@ -12,6 +12,12 @@
 
 extern server *controller;
 
+/**
+ * handles a command received from the controller's console
+ * @param cmd : a pointer to the string containing the command to treat
+ * @param answer : a pointer to the buffer where the answer should be written
+ * @param aq : a pointer to the aquarium
+ */
 void command__from_client(connection *c, aquarium *aq)
 {
 	char *tmp_buffer = malloc(sizeof(char) * COMMAND__MAX_SIZE);
@@ -198,40 +204,11 @@ void command__from_client(connection *c, aquarium *aq)
 	}
 }
 
-void *connection__get_fish_continuously(void *conn)
-{
-	connection *c = (connection *)conn;
-    fish *f;
-	while (c->status == CONNECTED && controller->status == CONNECTED)
-	{
-		sprintf(c->answer_buffer, "list ");
-		STAILQ_FOREACH(f, &(controller->aquarium->fish_list), next)
-		{
-            DEBUG_OUT("f->position = %d\n", f->position);
-            DEBUG_OUT("%s in %s ?\n", f->name, c->associated_view->name);
-            if (f->is_started &&
-                f->position < FISH_PATH_SIZE - 1 &&
-                (frame__includes_snippet(c->associated_view->frame, f->path[f->position]) ||
-                 frame__includes_snippet(c->associated_view->frame, f->path[f->position + 1]) ||
-                 (f->position > 1 &&
-                 frame__includes_snippet(c->associated_view->frame, f->path[f->position - 1])
-                 ))) {
-                frame *relative_frame = frame__get_relative(f->path[f->position], c->associated_view->frame);
-                sprintf(c->answer_buffer, "%s [%s at %s,%d]", c->answer_buffer, f->name, frame__to_str(relative_frame), controller->fish_update_interval);
-                free(relative_frame);
-            } else if (!f->is_started && frame__includes_snippet(c->associated_view->frame, f->frame)) {
-                frame *relative_frame = frame__get_relative(f->frame, c->associated_view->frame);
-                sprintf(c->answer_buffer, "%s [%s at %s,%d]", c->answer_buffer, f->name, frame__to_str(relative_frame), 0);
-                free(relative_frame);
-            }
-		}
-		sprintf(c->answer_buffer, "%s\n", c->answer_buffer);
-		write(c->socket_fd, c->answer_buffer, strlen(c->answer_buffer));
-		sleep(controller->fish_update_interval);
-	}
-	pthread_exit(NULL);
-}
-
+/**
+ * handles a command received from the client's prompt
+ * @param c : a pointer to the connection (the client)
+ * @param aq : a pointer to the aquarium
+ */
 void command__from_server(char *command_buffer, char *answer_buffer, aquarium *aq)
 {
 	char *parsed_command[COMMAND__MAX_SIZE];
@@ -300,4 +277,43 @@ void command__from_server(char *command_buffer, char *answer_buffer, aquarium *a
 	{
 		sprintf(answer_buffer,"\t->NOK");
 	}
+}
+
+/**
+ * a function to responde to the command 'getFishesContinuously'. Sould be run on a separate thread
+ * @param connection : a pointer to the connection (the client)
+ * @return : NULL
+ */
+void *connection__get_fish_continuously(void *conn)
+{
+    connection *c = (connection *)conn;
+    fish *f;
+    while (c->status == CONNECTED && controller->status == CONNECTED)
+    {
+        sprintf(c->answer_buffer, "list ");
+        STAILQ_FOREACH(f, &(controller->aquarium->fish_list), next)
+        {
+            DEBUG_OUT("f->position = %d\n", f->position);
+            DEBUG_OUT("%s in %s ?\n", f->name, c->associated_view->name);
+            if (f->is_started &&
+                f->position < FISH_PATH_SIZE - 1 &&
+                (frame__includes_snippet(c->associated_view->frame, f->path[f->position]) ||
+                 frame__includes_snippet(c->associated_view->frame, f->path[f->position + 1]) ||
+                 (f->position > 1 &&
+                  frame__includes_snippet(c->associated_view->frame, f->path[f->position - 1])
+                 ))) {
+                frame *relative_frame = frame__get_relative(f->path[f->position], c->associated_view->frame);
+                sprintf(c->answer_buffer, "%s [%s at %s,%d]", c->answer_buffer, f->name, frame__to_str(relative_frame), controller->fish_update_interval);
+                free(relative_frame);
+            } else if (!f->is_started && frame__includes_snippet(c->associated_view->frame, f->frame)) {
+                frame *relative_frame = frame__get_relative(f->frame, c->associated_view->frame);
+                sprintf(c->answer_buffer, "%s [%s at %s,%d]", c->answer_buffer, f->name, frame__to_str(relative_frame), 0);
+                free(relative_frame);
+            }
+        }
+        sprintf(c->answer_buffer, "%s\n", c->answer_buffer);
+        write(c->socket_fd, c->answer_buffer, strlen(c->answer_buffer));
+        sleep(controller->fish_update_interval);
+    }
+    pthread_exit(NULL);
 }

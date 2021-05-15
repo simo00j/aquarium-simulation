@@ -14,8 +14,24 @@ typedef struct server {
 
 }server;
 
-int server__launch(server *server);
+/**
+ * launches a server by responding to requests
+ * @param server : a pointer to the server to launch
+ */
+void server__launch(server *server);
+
+/**
+ * updates the positions of the fish in the aquarium if they are started
+ * @param args : not used (can be NULL)
+ * @return : NULL
+ */
 void *server__update(void *args);
+
+/**
+ * gets and responds the commands from the controller's console
+ * @param args : not used (can be NULL)
+ * @return : NULL
+ */
 void *server__interface(void *args);
 
 #endif //SERVER_H

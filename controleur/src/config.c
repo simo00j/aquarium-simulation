@@ -26,7 +26,7 @@ void config__parser(FILE *config_file)
             config_value = atoi(tokens[1]);
             if (!strcmp(tokens[0], "controller-port"))
                 port = config_value;
-            
+
             else if (!strcmp(tokens[0], "display-timeout-value"))
                 timeout_value = config_value;
 
@@ -84,7 +84,7 @@ int config__get_fish_interval()
         \nUsage\n \
         controller-port = <numero de port> \n \
         display-timeout-value = <duree (s)>\n \
-        fish-update-interval =  <duree (s)>\n");   
+        fish-update-interval =  <duree (s)>\n");
     }
     return fish_update;
 }

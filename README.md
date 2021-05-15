@@ -26,6 +26,6 @@ make client
 Ce projet a été réalisé par les membres suivants :
 - Jalal IZEKKI
 - Mohammed Boudali
-- Bernard Hugo
+- Hugo Bernard
 - Mouhcine El Hammadi
 - Hicham Zghari

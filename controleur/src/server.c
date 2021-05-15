@@ -15,43 +15,11 @@
 
 server *controller;
 
-void *server__interface(void *args)
-{
-
-    char buffer[BUFFER_MAX_SIZE];
-    char answer_buffer[BUFFER_MAX_SIZE];
-    (void)args;
-
-    while (controller->status == CONNECTED)
-    {
-        printf("$ ");
-        bzero(buffer, BUFFER_MAX_SIZE);
-        bzero(answer_buffer, BUFFER_MAX_SIZE);
-        fgets(buffer, BUFFER_MAX_SIZE - 1, stdin);
-        command__from_server(buffer, answer_buffer,controller->aquarium);
-        printf("%s\n", answer_buffer);
-    }
-    return (void *)0;
-}
-
-void *server__update(void *args)
-{
-    (void) args;
-    while (controller->status == CONNECTED)
-    {
-        fish *f;
-        STAILQ_FOREACH(f, &(controller->aquarium->fish_list), next)
-        {
-            if (f->is_started) {
-                f->position++;
-            }
-        }
-        sleep(controller->fish_update_interval);
-    }
-    pthread_exit(NULL);
-}
-
-int server__launch(server *server)
+/**
+ * launches a server by responding to requests
+ * @param server : a pointer to the server to launch
+ */
+void server__launch(server *server)
 {
     int socket_fd, clilen;
     char buffer[BUFFER_MAX_SIZE];
@@ -90,9 +58,53 @@ int server__launch(server *server)
     }
     pthread_join(thread_server, NULL);
     aquarium__free(server->aquarium);
-    return 0;
 }
 
+/**
+ * updates the positions of the fish in the aquarium if they are started
+ * @param args : not used (can be NULL)
+ * @return : NULL
+ */
+void *server__update(void *args)
+{
+    (void) args;
+    while (controller->status == CONNECTED)
+    {
+        fish *f;
+        STAILQ_FOREACH(f, &(controller->aquarium->fish_list), next)
+        {
+            if (f->is_started) {
+                f->position++;
+            }
+        }
+        sleep(controller->fish_update_interval);
+    }
+    pthread_exit(NULL);
+}
+
+/**
+ * gets and responds the commands from the controller's console
+ * @param args : not used (can be NULL)
+ * @return : NULL
+ */
+void *server__interface(void *args)
+{
+
+    char buffer[BUFFER_MAX_SIZE];
+    char answer_buffer[BUFFER_MAX_SIZE];
+    (void)args;
+
+    while (controller->status == CONNECTED)
+    {
+        printf("$ ");
+        bzero(buffer, BUFFER_MAX_SIZE);
+        bzero(answer_buffer, BUFFER_MAX_SIZE);
+        fgets(buffer, BUFFER_MAX_SIZE - 1, stdin);
+        command__from_server(buffer, answer_buffer,controller->aquarium);
+        printf("%s\n", answer_buffer);
+    }
+    return (void *)0;
+}
 int main(void)
 {
     controller = malloc(sizeof(server));

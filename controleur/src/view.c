@@ -20,7 +20,7 @@ view *view__create(char *name, frame *frame)
 
 /**
  * frees a given view
- * @param view : a pointer to the views that needs to be freed
+ * @param view : a pointer to the view that needs to be freed
  */
 void view__free(view *view)
 {

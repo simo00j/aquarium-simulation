@@ -47,7 +47,6 @@ public class Prompt {
                 Scanner reader = new Scanner(commandsExample);
                 while (reader.hasNextLine()) {
                     this.connection.sendCommand(reader.nextLine());
-                    Thread.sleep(500);
                 }
                 reader.close();
             } catch (FileNotFoundException e) {
